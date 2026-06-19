@@ -1,0 +1,5 @@
+spring:
+  config:
+    name: grouph-buy-market-study-app
+  profiles:
+    active: dev
