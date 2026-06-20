@@ -1,1 +1,0 @@
-package com.hjs.study.domain.activity.adapter.repository;
