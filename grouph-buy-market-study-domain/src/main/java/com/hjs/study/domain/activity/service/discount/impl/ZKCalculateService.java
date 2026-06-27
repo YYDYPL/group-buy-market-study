@@ -7,6 +7,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
+/**
+ * 折扣优惠策略。
+ * 营销表达式表示折扣乘数，例如 0.8 表示按原价八折计算。
+ */
 @Slf4j
 @Service("ZK")
 public class ZKCalculateService extends AbstractDiscountCalculateService {

@@ -17,6 +17,9 @@ import java.math.BigDecimal;
 @Service
 @Slf4j
 public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
+    /**
+     * 结束节点：根据上下文中累计的数据组装试算结果。
+     */
     @Override
     protected TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品查询试算服务-EndNode userId:{} requestParameter:{}", requestParameter.getUserId(), JSON.toJSONString(requestParameter));
@@ -38,6 +41,9 @@ public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
                 .build();
     }
 
+    /**
+     * 结果实体构建完成后结束责任树。
+     */
     @Override
     public StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> get(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         return defaultStrategyHandler;

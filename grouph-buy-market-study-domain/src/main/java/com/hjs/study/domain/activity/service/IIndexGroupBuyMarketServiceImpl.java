@@ -15,6 +15,10 @@ public class IIndexGroupBuyMarketServiceImpl implements IIndexGroupBuyMarketServ
     @Resource
     private DefaultActivityStrategyFactory defaultActivityStrategyFactory;
 
+    /**
+     * 拼团营销试算入口。
+     * 具体业务步骤交给策略工厂构建的责任树执行。
+     */
     @Override
     public TrialBalanceEntity indexMarketTrial(MarketProductEntity marketProductEntity) throws Exception {
 

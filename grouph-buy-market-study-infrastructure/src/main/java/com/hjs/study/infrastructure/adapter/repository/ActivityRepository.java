@@ -27,6 +27,10 @@ public class ActivityRepository implements IActivityRepository {
     private ISkuDao skuDao;
 
 
+    /**
+     * 根据来源和渠道加载有效活动，并关联对应折扣规则。
+     * 返回前将持久化对象转换为领域值对象。
+     */
     @Override
     public GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel) {
         GroupBuyActivity groupBuyActivityReq = new GroupBuyActivity();
@@ -66,6 +70,9 @@ public class ActivityRepository implements IActivityRepository {
                 .build();
     }
 
+    /**
+     * 将 SKU 持久化对象转换为领域层使用的值对象。
+     */
     @Override
     public SkuVO querySkuByGoodsId(String goodsId) {
         Sku sku = skuDao.querySkuByGoodsId(goodsId);

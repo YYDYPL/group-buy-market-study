@@ -7,6 +7,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
+/**
+ * N 元购优惠策略。
+ * 营销表达式表示最终应付金额。
+ */
 @Slf4j
 @Service("N")
 public class NCalculateService extends AbstractDiscountCalculateService {

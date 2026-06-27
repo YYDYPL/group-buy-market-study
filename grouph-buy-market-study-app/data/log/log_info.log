@@ -1,8 +1,27 @@
-26-06-25.11:16:15.019 [main            ] INFO  GroupBuyDiscountDaoTest - Starting GroupBuyDiscountDaoTest using Java 17.0.5 on LAPTOP-4F5L21DO with PID 44892 (started by 25082 in D:\IntelliJ IDEA 2025.3.3\projectDeraction\grouph-buy-market-study\grouph-buy-market-study-app)
-26-06-25.11:16:15.020 [main            ] INFO  GroupBuyDiscountDaoTest - The following 1 profile is active: "dev"
-26-06-25.11:16:16.954 [main            ] INFO  GroupBuyDiscountDaoTest - Started GroupBuyDiscountDaoTest in 2.257 seconds (JVM running for 3.177)
-26-06-25.11:16:17.662 [main            ] INFO  HikariDataSource       - HikariPool-1 - Starting...
-26-06-25.11:16:18.104 [main            ] INFO  HikariDataSource       - HikariPool-1 - Start completed.
-26-06-25.11:16:18.252 [main            ] INFO  GroupBuyDiscountDaoTest - 测试结果:[{"createTime":1733538015000,"discountDesc":"直减优惠20元","discountId":25120207,"discountName":"直减优惠20元","discountType":0,"id":1,"marketExpr":"20","marketPlan":"ZJ","updateTime":1734840585000},{"createTime":1733538015000,"discountDesc":"满减优惠100-10元","discountId":25120208,"discountName":"满减优惠100-10元","discountType":0,"id":2,"marketExpr":"100,10","marketPlan":"MJ","updateTime":1734840587000},{"createTime":1733538015000,"discountDesc":"折扣优惠8折","discountId":25120209,"discountName":"折扣优惠8折","discountType":0,"id":4,"marketExpr":"0.8","marketPlan":"ZK","updateTime":1734840696000},{"createTime":1733538015000,"discountDesc":"N元购买优惠","discountId":25120210,"discountName":"N元购买优惠","discountType":0,"id":5,"marketExpr":"1.99","marketPlan":"N","updateTime":1734840699000}]
-26-06-25.11:16:18.266 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown initiated...
-26-06-25.11:16:18.333 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown completed.
+26-06-28.00:21:27.716 [main            ] INFO  ITagServiceTest        - Starting ITagServiceTest using Java 17.0.5 on LAPTOP-4F5L21DO with PID 67540 (started by 25082 in D:\IntelliJ IDEA 2025.3.3\projectDeraction\grouph-buy-market-study\grouph-buy-market-study-app)
+26-06-28.00:21:27.716 [main            ] INFO  ITagServiceTest        - The following 1 profile is active: "dev"
+26-06-28.00:21:28.582 [main            ] INFO  RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+26-06-28.00:21:28.590 [main            ] INFO  RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+26-06-28.00:21:28.661 [main            ] INFO  RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 35 ms. Found 0 Redis repository interfaces.
+26-06-28.00:21:30.172 [main            ] INFO  Version                - Redisson 3.26.0
+26-06-28.00:21:30.695 [redisson-netty-1-4] INFO  ConnectionsHolder      - 1 connections initialized for 124.223.115.249/124.223.115.249:16379
+26-06-28.00:21:30.797 [redisson-netty-1-13] INFO  ConnectionsHolder      - 5 connections initialized for 124.223.115.249/124.223.115.249:16379
+26-06-28.00:21:32.606 [main            ] INFO  EndpointLinksResolver  - Exposing 1 endpoint(s) beneath base path '/actuator'
+26-06-28.00:21:32.674 [main            ] INFO  ITagServiceTest        - Started ITagServiceTest in 5.407 seconds (JVM running for 6.561)
+26-06-28.00:21:33.264 [main            ] INFO  TagService             - 开始执行标签批次任务,tagId:RQ_KJHKL98UU78H66554GFDV,batchId:10001
+26-06-28.00:21:33.290 [main            ] INFO  HikariDataSource       - HikariPool-1 - Starting...
+26-06-28.00:21:33.785 [main            ] INFO  HikariDataSource       - HikariPool-1 - Start completed.
+26-06-28.00:21:34.069 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown initiated...
+26-06-28.00:21:34.169 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown completed.
+26-06-28.00:21:39.339 [main            ] INFO  ITagServiceTest        - Starting ITagServiceTest using Java 17.0.5 on LAPTOP-4F5L21DO with PID 37176 (started by 25082 in D:\IntelliJ IDEA 2025.3.3\projectDeraction\grouph-buy-market-study\grouph-buy-market-study-app)
+26-06-28.00:21:39.339 [main            ] INFO  ITagServiceTest        - The following 1 profile is active: "dev"
+26-06-28.00:21:40.106 [main            ] INFO  RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+26-06-28.00:21:40.109 [main            ] INFO  RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+26-06-28.00:21:40.149 [main            ] INFO  RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 27 ms. Found 0 Redis repository interfaces.
+26-06-28.00:21:41.448 [main            ] INFO  Version                - Redisson 3.26.0
+26-06-28.00:21:41.925 [redisson-netty-1-6] INFO  ConnectionsHolder      - 1 connections initialized for 124.223.115.249/124.223.115.249:16379
+26-06-28.00:21:42.014 [redisson-netty-1-13] INFO  ConnectionsHolder      - 5 connections initialized for 124.223.115.249/124.223.115.249:16379
+26-06-28.00:21:43.789 [main            ] INFO  EndpointLinksResolver  - Exposing 1 endpoint(s) beneath base path '/actuator'
+26-06-28.00:21:43.862 [main            ] INFO  ITagServiceTest        - Started ITagServiceTest in 4.876 seconds (JVM running for 6.048)
+26-06-28.00:21:44.811 [main            ] INFO  ITagServiceTest        - xiaofuge 存在，预期结果为 true，测试结果:false
+26-06-28.00:21:44.820 [main            ] INFO  ITagServiceTest        - gudebai 不存在，预期结果为 false，测试结果:false

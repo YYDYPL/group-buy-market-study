@@ -23,6 +23,9 @@ public class RootNode extends AbstractGroupBuyMarketSupport<MarketProductEntity,
     private SwitchNode switchNode;
 
 
+    /**
+     * 根节点负责基础参数校验，避免无效请求进入后续数据库查询。
+     */
     @Override
     protected TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品查询试算服务-RootNode userId:{} requestParameter:{}", requestParameter.getUserId(), JSON.toJSONString(requestParameter));
@@ -35,6 +38,9 @@ public class RootNode extends AbstractGroupBuyMarketSupport<MarketProductEntity,
         return router(requestParameter, dynamicContext);
     }
 
+    /**
+     * 参数校验通过后，固定流转到开关节点。
+     */
     @Override
     public StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> get(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         return switchNode;

@@ -25,12 +25,20 @@ import java.util.concurrent.*;
 @Slf4j
 public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
 
+    /**
+     * 共享线程池，用于并行加载互不依赖的试算数据。
+     */
     @Resource
     private ThreadPoolExecutor threadPoolExecutor;
     @Resource
     private EndNode endNode;
     @Resource
     private Map<String, IDiscountCalculateService> discountCalculateServiceMap;
+
+    /**
+     * 并行预加载活动折扣配置和商品信息。
+     * 查询结果写入动态上下文，供后续价格计算使用。
+     */
     @Override
     protected void multiThread(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws ExecutionException, InterruptedException, TimeoutException {
         //异步查询活动配置
@@ -52,6 +60,9 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
 
     }
 
+    /**
+     * 根据营销计划选择折扣策略，并计算本次试算的应付价格。
+     */
     @Override
     protected TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品查询试算服务-MarketNode userId:{} requestParameter:{}", requestParameter.getUserId(), JSON.toJSONString(requestParameter));
@@ -74,6 +85,9 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
         return router(requestParameter,dynamicContext);
     }
 
+    /**
+     * 价格计算完成后，将已填充的上下文交给结果组装节点。
+     */
     @Override
     public StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> get(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         return endNode;

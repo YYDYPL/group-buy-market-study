@@ -18,6 +18,10 @@ public class SwitchNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
     @Resource
     private MarketNode marketNode;
 
+    /**
+     * 预留开关、灰度或功能控制扩展点。
+     * 当前流程直接进入营销计算节点。
+     */
     @Override
     protected TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         return router(requestParameter,dynamicContext);

@@ -8,6 +8,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
+/**
+ * 满减优惠策略。
+ * 营销表达式按配置分隔符拆分，例如：门槛金额,扣减金额。
+ */
 @Slf4j
 @Service("MJ")
 public class MJCalculateService extends AbstractDiscountCalculateService {

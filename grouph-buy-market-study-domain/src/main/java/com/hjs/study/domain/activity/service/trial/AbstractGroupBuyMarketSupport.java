@@ -10,8 +10,15 @@ import javax.annotation.Resource;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * 拼团试算策略节点公共支撑类。
+ * 节点需要在路由前预加载数据时，可以覆写 {@link #multiThread}。
+ */
 public abstract class AbstractGroupBuyMarketSupport<MarketProductEntity, DynamicContext, TrialBalanceEntity> extends AbstractMultiThreadStrategyRouter<com.hjs.study.domain.activity.model.entity.MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, com.hjs.study.domain.activity.model.entity.TrialBalanceEntity> {
 
+    /**
+     * 节点异步查询的超时时间。
+     */
     protected long timeout = 500;
     @Resource
     protected IActivityRepository repository;

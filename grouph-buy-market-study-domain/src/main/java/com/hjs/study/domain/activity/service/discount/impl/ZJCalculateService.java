@@ -7,6 +7,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
+/**
+ * 直减优惠策略。
+ * 营销表达式表示从原价中扣减的金额。
+ */
 @Slf4j
 @Service("ZJ")
 public class ZJCalculateService extends AbstractDiscountCalculateService {
