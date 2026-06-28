@@ -37,6 +37,8 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
     private Map<String, IDiscountCalculateService> discountCalculateServiceMap;
     @Resource
     private ErrorNode errorNode;
+    @Resource
+    private TagNode tagNode;
     /**
      * 并行预加载活动折扣配置和商品信息。
      * 查询结果写入动态上下文，供后续价格计算使用。
@@ -101,6 +103,6 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
         if (null == dynamicContext.getGroupBuyActivityDiscountVO() || null == dynamicContext.getSkuVO() || null == dynamicContext.getDeductionPrice()) {
             return errorNode;
         }
-        return endNode;
+        return tagNode;
     }
 }
