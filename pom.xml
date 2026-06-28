@@ -13,6 +13,7 @@
         <module>grouph-buy-market-study-trigger</module>
         <module>grouph-buy-market-study-infrastructure</module>
         <module>grouph-buy-market-study-types</module>
+        <module>group-buy-market-api</module>
     </modules>
 
     <repositories>

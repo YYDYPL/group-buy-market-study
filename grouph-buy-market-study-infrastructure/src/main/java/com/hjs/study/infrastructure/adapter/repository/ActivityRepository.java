@@ -13,6 +13,7 @@ import com.hjs.study.infrastructure.dao.po.GroupBuyActivity;
 import com.hjs.study.infrastructure.dao.po.GroupBuyDiscount;
 import com.hjs.study.infrastructure.dao.po.SCSkuActivity;
 import com.hjs.study.infrastructure.dao.po.Sku;
+import com.hjs.study.infrastructure.dcc.DCCService;
 import com.hjs.study.infrastructure.redis.IRedisService;
 import org.redisson.api.RBitSet;
 import org.springframework.stereotype.Repository;
@@ -35,6 +36,8 @@ public class ActivityRepository implements IActivityRepository {
     private ISCSkuActivityDao skuActivityDao;
     @Resource
     private IRedisService redisService;
+    @Resource
+    private DCCService dccService;
 
     /**
      * 根据来源和渠道加载有效活动，并关联对应折扣规则。
@@ -114,4 +117,15 @@ public class ActivityRepository implements IActivityRepository {
         // 判断用户是否存在人群中
         return bitSet.get(redisService.getIndexFromUserId(userId));
     }
+
+    @Override
+    public boolean downgradeSwitch() {
+        return dccService.isDowngradeSwitch();
+    }
+
+    @Override
+    public boolean cutRange(String userId) {
+        return dccService.isCutRange(userId);
+    }
+
 }
