@@ -1,5 +1,5 @@
 spring:
   config:
-    name: grouph-buy-market-study-app
+    name: group-buy-market-app
   profiles:
     active: dev
