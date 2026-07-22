@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.hjs.study.infrastructure.dao.ISkuDao">
+<mapper namespace="cn.bugstack.infrastructure.dao.ISkuDao">
 
-    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.Sku">
+    <!--
+        sku 表结果映射。
+        当前项目里的商品信息较轻量，主要提供商品名、原价以及渠道维度字段。
+    -->
+    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.Sku">
         <id column="id" property="id"/>
         <result column="source" property="source"/>
         <result column="channel" property="channel"/>
@@ -13,6 +17,10 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!--
+        按商品业务 ID 查询商品基础信息。
+        该查询结果通常会在活动试算或详情展示时被转换为 SkuVO。
+    -->
     <select id="querySkuByGoodsId" parameterType="java.lang.String" resultMap="dataMap">
         select source, channel, goods_id, goods_name, original_price
         from sku

@@ -1,53 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 日志级别从低到高分为TRACE < DEBUG < INFO < WARN < ERROR < FATAL，如果设置为WARN，则低于WARN的信息都不会输出 -->
+<!--
+    Spring Boot Logback 配置。
+    日志级别从低到高为 TRACE < DEBUG < INFO < WARN < ERROR；阈值设为 WARN 时会过滤更低级别。
+    scan=true 表示运行期间每 10 秒检查配置变化并尝试重新加载。
+-->
 <configuration scan="true" scanPeriod="10 seconds">
 
+    <!-- 上下文名称用于区分同一日志系统中的不同应用。 -->
     <contextName>logback</contextName>
-    <!-- name的值是变量的名称，value的值时变量定义的值。通过定义的值会被插入到logger上下文中。定义变量后，可以使“${}”来使用变量。 -->
+    <!-- 从 Spring Environment 读取 logging.path，后续可用 ${log.path} 引用。 -->
     <springProperty scope="context" name="log.path" source="logging.path"/>
-    <!-- 日志格式 -->
+    <!-- 注册 Spring Boot 提供的颜色和异常格式转换器。 -->
     <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
     <conversionRule conversionWord="wex"
                     converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
     <conversionRule conversionWord="wEx"
                     converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
 
-    <!-- 输出到控制台 -->
+    <!-- 控制台输出：仅输出 INFO 及以上日志，适合本地开发和容器标准输出采集。 -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- 此日志appender是为开发使用，只配置最底级别，控制台输出的日志级别是大于或等于此级别的日志信息 -->
+        <!-- ThresholdFilter 过滤低于 INFO 的事件。 -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>info</level>
         </filter>
         <encoder>
+            <!-- 输出时间、线程、级别、Logger、服务标识、TraceId 和正文。 -->
             <pattern>%d{yy-MM-dd.HH:mm:ss.SSS} [%-16t] %-5p %-22c{0}%X{ServiceId} -%X{trace-id} %m%n</pattern>
             <charset>UTF-8</charset>
         </encoder>
     </appender>
 
-    <!--输出到文件-->
-    <!-- 时间滚动输出 level为 INFO 日志 -->
+    <!-- INFO 文件：当前根 Logger 的所有 INFO 及以上事件都会进入该文件。 -->
     <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- 正在记录的日志文件的路径及文件名 -->
+        <!-- 当天正在写入的活动日志文件。 -->
         <file>./data/log/log_info.log</file>
-        <!--日志文件输出格式-->
+        <!-- 文件编码和输出字段与控制台保持一致，便于交叉检索。 -->
         <encoder>
             <pattern>%d{yy-MM-dd.HH:mm:ss.SSS} [%-16t] %-5p %-22c{0}%X{ServiceId} -%X{trace-id} %m%n</pattern>
             <charset>UTF-8</charset>
         </encoder>
-        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <!-- 同时按日期和单文件大小滚动，避免单个日志文件过大。 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- 每天日志归档路径以及格式 -->
+            <!-- %d 按天分组，%i 是同一天内超过 100MB 后递增的文件序号。 -->
             <fileNamePattern>./data/log/log-info-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>100MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
-            <!--日志文件保留天数-->
+            <!-- 最多保留 15 天且所有归档总量不超过 10GB，任一条件达到都会清理旧文件。 -->
             <maxHistory>15</maxHistory>
             <totalSizeCap>10GB</totalSizeCap>
         </rollingPolicy>
     </appender>
 
-    <!-- 时间滚动输出 level为 ERROR 日志 -->
+    <!-- ERROR_FILE 实际接收 WARN 及以上事件，用于快速定位告警和异常。 -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!-- 正在记录的日志文件的路径及文件名 -->
         <file>./data/log/log_error.log</file>
@@ -62,29 +67,30 @@
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>100MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
-            <!-- 日志文件保留天数【根据服务器预留，可自行调整】 -->
+            <!-- 错误归档最多保留 7 天、总量不超过 5GB。 -->
             <maxHistory>7</maxHistory>
             <totalSizeCap>5GB</totalSizeCap>
         </rollingPolicy>
-        <!-- WARN 级别及以上 -->
+        <!-- WARN 级别及以上才写入该文件。 -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>WARN</level>
         </filter>
     </appender>
 
-    <!-- 异步输出 -->
+    <!-- INFO 文件异步包装器：将磁盘 IO 从业务线程转移到 Logback 工作线程。 -->
     <appender name="ASYNC_FILE_INFO" class="ch.qos.logback.classic.AsyncAppender">
-        <!-- 队列剩余容量小于discardingThreshold,则会丢弃TRACT、DEBUG、INFO级别的日志;默认值-1,为queueSize的20%;0不丢失日志 -->
+        <!-- discardingThreshold=0 禁止按剩余容量主动丢弃低级别日志。 -->
         <discardingThreshold>0</discardingThreshold>
-        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <!-- 较大队列用于吸收短时日志峰值，但也会增加内存占用。 -->
         <queueSize>8192</queueSize>
-        <!-- neverBlock:true 会丢失日志,但业务性能不受影响 -->
+        <!-- 队列完全写满时不阻塞业务线程，代价是可能丢失日志。 -->
         <neverBlock>true</neverBlock>
-        <!--是否提取调用者数据-->
+        <!-- 不提取调用代码位置，减少异步日志的栈遍历开销。 -->
         <includeCallerData>false</includeCallerData>
         <appender-ref ref="INFO_FILE"/>
     </appender>
 
+    <!-- WARN/ERROR 文件使用独立异步队列，避免普通信息日志挤占错误日志容量。 -->
     <appender name="ASYNC_FILE_ERROR" class="ch.qos.logback.classic.AsyncAppender">
         <!-- 队列剩余容量小于discardingThreshold,则会丢弃TRACT、DEBUG、INFO级别的日志;默认值-1,为queueSize的20%;0不丢失日志 -->
         <discardingThreshold>0</discardingThreshold>
@@ -97,17 +103,30 @@
         <appender-ref ref="ERROR_FILE"/>
     </appender>
 
-    <!-- 开发环境：控制台打印 -->
+    <!-- 从 Spring 配置读取 Logstash 主机；缺失时回退到本机。 -->
+    <springProperty name="LOG_STASH_HOST" scope="context" source="logstash.host" defaultValue="127.0.0.1"/>
+
+    <!-- 将结构化 JSON 日志通过 TCP 4560 端口发送给 Logstash。 -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <!-- 目标端口需要与 Logstash input 插件监听端口保持一致。 -->
+        <destination>${LOG_STASH_HOST}:4560</destination>
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+
+    <!-- 仅 dev profile 生效的包级 DEBUG Logger。 -->
     <springProfile name="dev">
         <logger name="com.nmys.view" level="debug"/>
     </springProfile>
 
+    <!-- 根 Logger 将同一事件同时发往控制台、两个异步文件和 Logstash。 -->
     <root level="info">
         <appender-ref ref="CONSOLE"/>
         <!-- 异步日志-INFO -->
         <appender-ref ref="ASYNC_FILE_INFO"/>
         <!-- 异步日志-ERROR -->
         <appender-ref ref="ASYNC_FILE_ERROR"/>
+        <!-- 启用了 ELK 上报；如本地没有 Logstash，可注释此引用。 -->
+         <appender-ref ref="LOGSTASH"/>
     </root>
 
 </configuration>

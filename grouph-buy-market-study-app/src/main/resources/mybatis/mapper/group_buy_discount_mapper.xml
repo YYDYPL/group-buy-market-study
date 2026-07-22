@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.hjs.study.infrastructure.dao.IGroupBuyDiscountDao">
+<mapper namespace="cn.bugstack.infrastructure.dao.IGroupBuyDiscountDao">
 
-    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.GroupBuyDiscount">
+    <!--
+        group_buy_discount 表结果映射。
+        该表定义活动关联的营销优惠方案，包括优惠类型、优惠计划和表达式等。
+    -->
+    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.GroupBuyDiscount">
         <id column="id" property="id"/>
         <result column="discount_id" property="discountId"/>
         <result column="discount_name" property="discountName"/>
@@ -15,10 +19,15 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!-- 查询全部折扣方案配置。 -->
     <select id="queryGroupBuyDiscountList" resultMap="dataMap">
         select * from group_buy_discount
     </select>
 
+    <!--
+        按折扣业务 ID 查询折扣配置。
+        当前只取活动试算与计算真正需要的字段，不包含 id 等非核心字段。
+    -->
     <select id="queryGroupBuyActivityDiscountByDiscountId" parameterType="java.lang.String" resultMap="dataMap">
         select discount_id, discount_name, discount_desc, discount_type, market_plan, market_expr, tag_id
         from group_buy_discount

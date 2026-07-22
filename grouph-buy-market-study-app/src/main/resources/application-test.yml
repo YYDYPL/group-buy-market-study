@@ -1,7 +1,8 @@
+# 测试环境使用独立端口，避免与其他本地服务实例冲突时可通过启动参数覆盖。
 server:
   port: 8091
 
-# 线程池配置
+# 测试环境线程池配置；属性映射到 ThreadPoolConfigProperties。
 thread:
   pool:
     executor:
@@ -12,7 +13,8 @@ thread:
         block-queue-size: 5000
         policy: CallerRunsPolicy
 
-# 数据库配置
+# 数据库与 MyBatis 配置暂时整体关闭。
+# 需要执行依赖真实数据库的集成测试时，应先替换为有效测试库连接，再取消以下配置的注释。
 #spring:
 #  datasource:
 #    username: root
@@ -30,11 +32,12 @@ thread:
 #    connection-test-query: SELECT 1
 #  type: com.zaxxer.hikari.HikariDataSource
 
+# Mapper XML 和 MyBatis 全局配置的资源位置。
 #mybatis:
 #  mapper-locations: classpath:/mybatis/mapper/*.xml
 #  config-location:  classpath:/mybatis/config/mybatis-config.xml
 
-# 日志
+# 测试日志使用与应用一致的 Logback 配置，根级别为 INFO。
 logging:
   level:
     root: info

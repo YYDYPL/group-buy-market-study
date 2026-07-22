@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.hjs.study.infrastructure.dao.IGroupBuyActivityDao">
+<mapper namespace="cn.bugstack.infrastructure.dao.IGroupBuyActivityDao">
 
-    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.GroupBuyActivity">
+    <!--
+        group_buy_activity 表结果映射。
+        这里描述的是拼团活动本身的核心规则，
+        包括折扣方案、成团方式、活动时间和人群标签限制。
+    -->
+    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.GroupBuyActivity">
         <id column="id" property="id"/>
         <result column="activity_id" property="activityId"/>
         <result column="activity_name" property="activityName"/>
@@ -20,26 +25,49 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!-- 查询全部活动配置，常用于初始化、测试或后台查看场景。 -->
     <select id="queryGroupBuyActivityList" resultMap="dataMap">
         select * from group_buy_activity
     </select>
 
-    <select id="queryValidGroupBuyActivity" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyActivity"
+    <!--
+        按 source + channel 查询一条最新活动配置。
+        当前表结构说明里未体现这两个字段，这里更像是早期或扩展版本的渠道活动路由查询。
+        由于按 id 倒序并 limit 1，因此只取最新一条命中记录。
+    -->
+    <select id="queryValidGroupBuyActivity" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyActivity"
             resultMap="dataMap">
         select
-            activity_id, activity_name, discount_id, group_type, take_limit_count,
-            target, valid_time, status, start_time, end_time, tag_id, tag_scope
+        activity_id, activity_name, discount_id, group_type, take_limit_count,
+        target, valid_time, status, start_time, end_time, tag_id, tag_scope
         from group_buy_activity
         where source = #{source} and channel = #{channel}
         order by id desc
-            limit 1
+        limit 1
     </select>
 
+    <!--
+        按活动业务 ID 查询已生效的活动配置。
+        这里额外要求 status = 1，只返回当前处于“生效”状态的活动。
+    -->
     <select id="queryValidGroupBuyActivityId" parameterType="java.lang.Long" resultMap="dataMap">
         select
-            activity_id, activity_name, discount_id, group_type, take_limit_count,
-            target, valid_time, status, start_time, end_time, tag_id, tag_scope
+        activity_id, activity_name, discount_id, group_type, take_limit_count,
+        target, valid_time, status, start_time, end_time, tag_id, tag_scope
         from group_buy_activity
         where activity_id = #{activityId} and status = 1
     </select>
+
+    <!--
+        按活动业务 ID 查询活动配置，不校验状态。
+        常用于交易域回查历史活动信息，即使活动已经过期或废弃也允许查询到。
+    -->
+    <select id="queryGroupBuyActivityByActivityId" parameterType="java.lang.Long" resultMap="dataMap">
+        select
+        activity_id, activity_name, discount_id, group_type, take_limit_count,
+        target, valid_time, status, start_time, end_time, tag_id, tag_scope
+        from group_buy_activity
+        where activity_id = #{activityId}
+    </select>
+
 </mapper>

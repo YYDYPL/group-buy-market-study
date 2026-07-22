@@ -1,5 +1,8 @@
+# 应用公共入口配置：只声明配置名称和默认环境，具体资源连接参数由 profile 文件提供。
 spring:
   config:
+    # 用于标识当前 Spring 应用的配置名称。
     name: group-buy-market-app
   profiles:
+    # 本地启动默认加载 application-dev.yml；部署时可通过启动参数覆盖为 prod 或 test。
     active: dev

@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.hjs.study.infrastructure.dao.ICrowdTagsDetailDao">
+<mapper namespace="cn.bugstack.infrastructure.dao.ICrowdTagsDetailDao">
 
-    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.CrowdTagsDetail">
+    <!--
+        crowd_tags_detail 表结果映射。
+        这张表保存“某个用户命中了某个人群标签”的明细记录，
+        是 TagNode 判断用户是否属于指定标签的重要依据。
+    -->
+    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.CrowdTagsDetail">
         <id column="id" property="id"/>
         <result column="tag_id" property="tagId"/>
         <result column="user_id" property="userId"/>
@@ -10,7 +15,12 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <insert id="addCrowdTagsUserId" parameterType="com.hjs.study.infrastructure.dao.po.CrowdTagsDetail">
+    <!--
+        新增用户标签归属记录。
+        正常由标签批处理任务调用，把符合条件的用户写入标签明细表。
+        表上通常会有 tag_id + user_id 唯一约束，上层会配合做幂等处理。
+    -->
+    <insert id="addCrowdTagsUserId" parameterType="cn.bugstack.infrastructure.dao.po.CrowdTagsDetail">
         insert into crowd_tags_detail(tag_id, user_id, create_time, update_time)
         values (#{tagId}, #{userId}, now(), now())
     </insert>

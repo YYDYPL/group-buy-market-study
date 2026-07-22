@@ -12,34 +12,38 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- Web 容器、Spring MVC 与 JSON 请求响应支持。 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- Spring 上下文集成测试；仅测试源码可见。 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- 显式引入内嵌 Tomcat 核心组件，运行时由 Spring Boot 启动。 -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
         </dependency>
+        <!-- 为 @ConfigurationProperties 生成 IDE 元数据。 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
         </dependency>
+        <!-- MyBatis 与 Spring Boot 自动装配。 -->
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
         </dependency>
-        <!-- # 多数据源路由配置
-             # mysql 5.x driver-class-name: com.mysql.jdbc.Driver    mysql-connector-java 5.1.34
-             # mysql 8.x driver-class-name: com.mysql.cj.jdbc.Driver mysql-connector-java 8.0.22-->
+        <!-- MySQL JDBC 驱动：5.x 使用 com.mysql.jdbc.Driver，8.x 使用 com.mysql.cj.jdbc.Driver。 -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
+        <!-- JSON、字符串工具、代码生成和本地缓存等通用依赖。 -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
@@ -79,10 +83,39 @@
             <version>2.9.0</version>
         </dependency>
 
+        <!-- HTTP 长连接事件和请求日志拦截能力，由底层网关复用 OkHttpClient。 -->
         <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson-spring-boot-starter</artifactId>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-sse</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>logging-interceptor</artifactId>
+        </dependency>
+
+        <!-- RabbitMQ 生产、消费以及 @RabbitListener 支持。 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <!-- 将结构化日志编码后发送到 Logstash。 -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+        </dependency>
+
+        <!-- Actuator 暴露运行状态，Micrometer 将指标转换为 Prometheus 格式。 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
 
         <!-- 工程模块；启动依赖 trigger->domain, infrastructure-->
         <dependency>

@@ -3,7 +3,19 @@
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
-    <!-- 暂时未使用 文档：https://mybatis.org/mybatis-3/zh/configuration.html#typeAliases -->
+    <!--
+        MyBatis 全局配置文件。
+        当前项目在 Spring Boot 集成下，大部分配置都交给自动装配处理，
+        这里暂时只保留一个空的 typeAliases 节点作为扩展位。
+
+        参考文档：
+        https://mybatis.org/mybatis-3/zh/configuration.html#typeAliases
+    -->
     <typeAliases>
+        <!--
+            目前未配置别名。
+            如果后续 PO、DTO、VO 类很多，可以在这里集中声明别名，
+            这样 Mapper XML 中就不必每次都写完整限定类名。
+        -->
     </typeAliases>
 </configuration>

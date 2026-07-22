@@ -1,8 +1,10 @@
+# Web 容器配置：当前值偏向本地或低资源环境，生产部署前应结合压测结果调整。
 server:
   port: 8091
-  # 1核2G内存，可默认配置 200；4核8G内存【accept-count=1000、max-threads=800、max-connections=10000】，线程数经验值800。线程池过大，cpu调度会消耗大量时间
+  # Tomcat 容量需要与 CPU、内存及下游吞吐配套；线程过多会增加上下文切换成本。
   tomcat:
     mbeanregistry:
+      # 注册 Tomcat MBean，供 Actuator/JMX 采集连接与线程指标。
       enabled: true
     max-connections: 20 # 最大连接数
     threads:
@@ -10,7 +12,7 @@ server:
       min-spare: 10   # 初始化线程数,最小空闲线程数,默认是10
     accept-count: 10  # 等待队列长度
 
-# 线程池配置
+# 业务异步线程池配置，对应 ThreadPoolConfigProperties；keep-alive-time 在代码中按秒解释。
 thread:
   pool:
     executor:
@@ -22,15 +24,17 @@ thread:
         # 当线程池中的任务队列已满，并且没有空闲线程可以执行新任务时，CallerRunsPolicy 会将任务回退到调用者线程中运行。这种策略适用于不希望丢失任务且可以接受调用者线程被阻塞的场景。
         policy: CallerRunsPolicy
 
-# 数据库配置；启动时配置数据库资源信息
+# 数据库连接与 HikariCP 连接池配置。
 spring:
   datasource:
+    # 账号、密码和地址在正式环境中应通过环境变量或配置中心覆盖，避免固化敏感信息。
     username: root
     password: 12345678
     url: jdbc:mysql://127.0.0.1:3306/group_buy_market?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&useSSL=true&sessionVariables=sql_mode='NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES'
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
+      # 连接池容量应小于数据库可承受连接数，并与应用实例数量一并估算。
       pool-name: Retail_HikariCP
       minimum-idle: 15 #最小空闲连接数量
       idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
@@ -39,7 +43,7 @@ spring:
       max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
       connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
       connection-test-query: SELECT 1
-  # RabbitMQ
+  # RabbitMQ 连接、消费限流和业务消息拓扑参数。
   rabbitmq:
     addresses: 192.168.1.108
     port: 15672
@@ -47,33 +51,34 @@ spring:
     password: admin
     listener:
       simple:
-        prefetch: 1 # 每次投递n个消息，消费完在投递n个
+        prefetch: 1 # 单个消费者每次只预取 1 条未确认消息，降低慢任务造成的消息堆积。
     template:
       delivery-mode: persistent # 确保全局默认设置为持久化（可选）
-    # 消息配置
+    # 自定义消息配置，由生产端和 @RabbitListener 使用相同键读取。
     config:
       # 生产者
       producer:
-        # 绑定交换机，统一一套交换机
+        # 拼团业务事件统一发布到同一个 Topic 交换机。
         exchange: group_buy_market_exchange
-        # 消息主题配置；路由key、队列
+        # 成团事件的路由键与消费队列。
         topic_team_success:
           # 消息主题
           routing_key: topic.team_success
           # 消费队列
           queue: group_buy_market_queue_2_topic_team_success
+        # 退单事件由消费端用于恢复队伍锁单库存。
         topic_team_refund:
           # 消息主题
           routing_key: topic.team_refund
           # 消费队列
           queue: group_buy_market_queue_2_topic_team_refund
 
-# MyBatis 配置【如需使用记得打开】
+# MyBatis Mapper XML 扫描路径与全局配置文件位置。
 mybatis:
   mapper-locations: classpath:/mybatis/mapper/*.xml
   config-location:  classpath:/mybatis/config/mybatis-config.xml
 
-# Redis
+# Redisson 单机客户端配置，参数绑定到 RedisClientConfigProperties。
 redis:
   sdk:
     config:
@@ -88,7 +93,7 @@ redis:
       ping-interval: 60000
       keep-alive: true
 
-# 扳手工程；通用配置组件「配置中心、设计模式框架、限流服务」
+# xfg-wrench 通用组件配置：system 用于区分应用，register 指向动态配置注册中心使用的 Redis。
 xfg:
   wrench:
     config:
@@ -97,11 +102,11 @@ xfg:
         host: 192.168.1.108
         port: 16379
 
-# 日志；logstash部署的服务器IP
+# Logstash 服务地址，由 logback-spring.xml 的 TCP appender 读取。
 logstash:
   host: 127.0.0.1
 
-# 监控配置 Prometheus + Grafana
+# Actuator 与 Prometheus 指标暴露配置；生产环境暴露全部端点时需要配合网络和鉴权限制。
 management:
   endpoints:
     web:
@@ -117,7 +122,7 @@ management:
   prometheus:
     enabled: true # 启用Prometheus端点
 
-# 日志
+# 应用根日志级别与 Logback 配置文件入口。
 logging:
   level:
     root: info
