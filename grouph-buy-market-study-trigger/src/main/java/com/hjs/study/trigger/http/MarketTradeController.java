@@ -13,7 +13,6 @@ import com.hjs.study.domain.trade.model.entity.PayActivityEntity;
 import com.hjs.study.domain.trade.model.entity.PayDiscountEntity;
 import com.hjs.study.domain.trade.model.entity.UserEntity;
 import com.hjs.study.domain.trade.model.valobj.GroupBuyProgressVO;
-import com.hjs.study.domain.trade.service.ITradeOrderService;
 import com.hjs.study.types.enums.ResponseCode;
 import com.hjs.study.types.exception.AppException;
 import com.alibaba.fastjson.JSON;

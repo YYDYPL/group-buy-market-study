@@ -14,18 +14,35 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
-@Service
+/**
+ * 开关控制节点。
+ * <p>
+ * 该节点负责执行运行时治理逻辑：
+ * 1. 判断活动域是否已被整体降级；
+ * 2. 判断当前用户是否命中灰度切量范围。
+ * 只有通过这两层控制后，才会真正进入营销试算阶段。
+ *
+ * @author Fuzhengwei bugstack.cn @小傅哥
+ * @description 开关节点
+ * @create 2024-12-14 14:27
+ */
 @Slf4j
+@Service
 public class SwitchNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
 
+    /** 下一跳节点，负责真正查询活动配置和执行折扣试算。 */
     @Resource
     private MarketNode marketNode;
 
-    /**
-     * 预留开关、灰度或功能控制扩展点。
-     * 当前流程直接进入营销计算节点。
-     */
     @Override
+    /**
+     * 执行降级与切量判断。
+     *
+     * @param requestParameter 试算输入参数
+     * @param dynamicContext 流程动态上下文
+     * @return 试算结果
+     * @throws Exception 降级或未命中切量时抛出业务异常
+     */
     public TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品查询试算服务-SwitchNode userId:{} requestParameter:{}", requestParameter.getUserId(), JSON.toJSONString(requestParameter));
 
@@ -48,7 +65,9 @@ public class SwitchNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
     }
 
     @Override
+    /** 通过治理检查后，继续进入营销节点。 */
     public StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> get(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         return marketNode;
     }
+
 }

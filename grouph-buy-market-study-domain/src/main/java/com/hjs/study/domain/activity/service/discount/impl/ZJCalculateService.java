@@ -8,14 +8,21 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 
 /**
- * 直减优惠策略。
- * 营销表达式表示从原价中扣减的金额。
+ * 直减优惠计算器。
+ * <p>
+ * 直减模式下，营销表达式表示“直接减去多少钱”，
+ * 例如配置 `20` 表示原价减 20 元。
+ *
+ * @author Fuzhengwei bugstack.cn @小傅哥
+ * @description 直减
+ * @create 2024-12-22 09:24
  */
 @Slf4j
 @Service("ZJ")
 public class ZJCalculateService extends AbstractDiscountCalculateService {
 
     @Override
+    /** 按“原价 - 固定减免金额”的方式计算支付价格。 */
     public BigDecimal doCalculate(BigDecimal originalPrice, GroupBuyActivityDiscountVO.GroupBuyDiscount groupBuyDiscount) {
         log.info("优惠策略折扣计算:{}", groupBuyDiscount.getDiscountType().getCode());
 

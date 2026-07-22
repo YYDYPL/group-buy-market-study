@@ -14,26 +14,49 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
-@Service
+/**
+ * 正常结束节点。
+ * <p>
+ * 当前面所有试算节点都顺利通过后，会在这里把上下文中累积的数据组装成最终结果。
+ * 因此它更像一个“结果组装器”，而不是再做新的业务判断。
+ *
+ * @author Fuzhengwei bugstack.cn @小傅哥
+ * @description 正常结束节点
+ * @create 2024-12-14 14:31
+ */
 @Slf4j
+@Service
 public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
-    /**
-     * 结束节点：根据上下文中累计的数据组装试算结果。
-     */
+
     @Override
-    protected TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
+    /**
+     * 组装最终的试算结果实体。
+     *
+     * @param requestParameter 试算输入参数
+     * @param dynamicContext 流程动态上下文
+     * @return 最终试算结果
+     */
+    public TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品查询试算服务-EndNode userId:{} requestParameter:{}", requestParameter.getUserId(), JSON.toJSONString(requestParameter));
-        //拼团活动配置
+
+        // 拼团活动配置
         GroupBuyActivityDiscountVO groupBuyActivityDiscountVO = dynamicContext.getGroupBuyActivityDiscountVO();
+
         // 商品信息
         SkuVO skuVO = dynamicContext.getSkuVO();
-        BigDecimal deductionPrice = dynamicContext.getDeductionPrice();
 
+        // 折扣金额
+        BigDecimal deductionPrice = dynamicContext.getDeductionPrice();
+        // 支付金额
+        BigDecimal payPrice = dynamicContext.getPayPrice();
+
+        // 组装完整的返回对象，供 controller / trigger 层直接输出。
         return TrialBalanceEntity.builder()
                 .goodsId(skuVO.getGoodsId())
                 .goodsName(skuVO.getGoodsName())
                 .originalPrice(skuVO.getOriginalPrice())
                 .deductionPrice(deductionPrice)
+                .payPrice(payPrice)
                 .targetCount(groupBuyActivityDiscountVO.getTarget())
                 .startTime(groupBuyActivityDiscountVO.getStartTime())
                 .endTime(groupBuyActivityDiscountVO.getEndTime())
@@ -43,11 +66,10 @@ public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
                 .build();
     }
 
-    /**
-     * 结果实体构建完成后结束责任树。
-     */
     @Override
+    /** 结束节点不再继续路由，返回默认结束处理器。 */
     public StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> get(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         return defaultStrategyHandler;
     }
+
 }

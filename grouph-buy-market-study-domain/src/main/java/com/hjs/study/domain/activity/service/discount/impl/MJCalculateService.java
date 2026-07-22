@@ -9,14 +9,21 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 
 /**
- * 满减优惠策略。
- * 营销表达式按配置分隔符拆分，例如：门槛金额,扣减金额。
+ * 满减优惠计算器。
+ * <p>
+ * 典型表达式形如 `100,10`，表示满 100 元减 10 元。
+ * 如果原价未达到门槛，则不触发优惠，直接返回原价。
+ *
+ * @author Fuzhengwei bugstack.cn @小傅哥
+ * @description 满减优惠计算
+ * @create 2024-12-22 12:12
  */
 @Slf4j
 @Service("MJ")
 public class MJCalculateService extends AbstractDiscountCalculateService {
 
     @Override
+    /** 按“满 X 减 Y”的规则计算最终支付价格。 */
     public BigDecimal doCalculate(BigDecimal originalPrice, GroupBuyActivityDiscountVO.GroupBuyDiscount groupBuyDiscount) {
         log.info("优惠策略折扣计算:{}", groupBuyDiscount.getDiscountType().getCode());
 
@@ -43,3 +50,4 @@ public class MJCalculateService extends AbstractDiscountCalculateService {
     }
 
 }
+

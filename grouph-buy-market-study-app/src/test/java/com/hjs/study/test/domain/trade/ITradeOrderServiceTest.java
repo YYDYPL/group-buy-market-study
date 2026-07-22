@@ -8,7 +8,6 @@ import com.hjs.study.domain.trade.model.entity.MarketPayOrderEntity;
 import com.hjs.study.domain.trade.model.entity.PayActivityEntity;
 import com.hjs.study.domain.trade.model.entity.PayDiscountEntity;
 import com.hjs.study.domain.trade.model.entity.UserEntity;
-import com.hjs.study.domain.trade.service.ITradeOrderService;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
