@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.bugstack.infrastructure.dao.IGroupBuyOrderListDao">
+<mapper namespace="com.hjs.study.infrastructure.dao.IGroupBuyOrderListDao">
 
     <!--
         group_buy_order_list 表结果映射。
         这张表保存的是“用户级订单明细”，记录单个用户参与某个队伍的订单事实，
         包括锁单、支付、退单、外部交易单号等信息。
     -->
-    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList">
+    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="team_id" property="teamId"/>
@@ -33,7 +33,7 @@
         新增一条用户参团明细。
         锁单成功后会写入这里，作为营销侧的用户订单记录。
     -->
-    <insert id="insert" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList">
+    <insert id="insert" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList">
         insert into group_buy_order_list(
         user_id, team_id, order_id, activity_id, start_time,
         end_time, goods_id, source, channel, original_price, pay_price,
@@ -51,7 +51,7 @@
         这是锁单接口幂等校验的重要 SQL，用于判断外部单号是否已经被处理过。
     -->
     <select id="queryGroupBuyOrderRecordByOutTradeNo"
-            parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList" resultMap="dataMap">
+            parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList" resultMap="dataMap">
         select user_id, team_id, order_id, activity_id, start_time,
         end_time, goods_id, source, channel, original_price, deduction_price, pay_price, status
         from group_buy_order_list
@@ -62,7 +62,7 @@
         统计用户在某活动下的参团次数。
         常用于校验 take_limit_count，即用户参与次数上限。
     -->
-    <select id="queryOrderCountByActivityId" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList"
+    <select id="queryOrderCountByActivityId" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList"
             resultType="java.lang.Integer">
         select count(id) from group_buy_order_list
         where user_id = #{userId} and activity_id = #{activityId}
@@ -72,7 +72,7 @@
         将订单明细从“初始锁定”更新为“支付完成”，并写入外部支付时间。
         通过 status = 0 约束，避免重复结算同一笔订单。
     -->
-    <update id="updateOrderStatus2COMPLETE" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList">
+    <update id="updateOrderStatus2COMPLETE" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList">
         update group_buy_order_list
         set status = 1, out_trade_time = #{outTradeTime}, update_time = now()
         where out_trade_no = #{outTradeNo} and user_id = #{userId} and status = 0
@@ -92,7 +92,7 @@
         3. 按 id 倒序后限制条数，优先取最近参与的记录。
     -->
     <select id="queryInProgressUserGroupBuyOrderDetailListByUserId"
-            parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList" resultMap="dataMap">
+            parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList" resultMap="dataMap">
         select user_id, team_id, out_trade_no
         from group_buy_order_list
         where activity_id = #{activityId} and user_id = #{userId} and status in (0, 1) and end_time > now()
@@ -106,7 +106,7 @@
         这里先通过 SQL 过滤出候选队伍，真正的随机抽样会在 Java 侧继续处理。
     -->
     <select id="queryInProgressUserGroupBuyOrderDetailListByRandom"
-            parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList" resultMap="dataMap">
+            parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList" resultMap="dataMap">
         select user_id, team_id, out_trade_no
         from group_buy_order_list
         where
@@ -132,7 +132,7 @@
     </select>
 
     <!-- 未支付即退单：只允许从 status = 0 更新到 status = 2。 -->
-    <update id="unpaid2Refund" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList">
+    <update id="unpaid2Refund" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList">
         update group_buy_order_list
         set status = 2, update_time = now()
         where
@@ -142,7 +142,7 @@
     </update>
 
     <!-- 已支付但未成团退单：只允许从 status = 1 更新到 status = 2。 -->
-    <update id="paid2Refund" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList">
+    <update id="paid2Refund" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList">
         update group_buy_order_list
         set status = 2, update_time = now()
         where
@@ -156,7 +156,7 @@
         对明细表来说仍然只是把该成员订单标记为退单，
         具体队伍变成“完成含退单”还是“失败”由主单表决定。
     -->
-    <update id="paidTeam2Refund" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrderList">
+    <update id="paidTeam2Refund" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrderList">
         update group_buy_order_list
         set status = 2, update_time = now()
         where

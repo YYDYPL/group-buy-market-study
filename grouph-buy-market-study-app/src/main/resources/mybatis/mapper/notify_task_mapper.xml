@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.bugstack.infrastructure.dao.INotifyTaskDao">
+<mapper namespace="com.hjs.study.infrastructure.dao.INotifyTaskDao">
 
     <!--
         notify_task 表结果映射。
         这张表承担本地消息任务表的职责，用于记录拼团成功、退单等场景下
         需要对外发送的 HTTP 或 MQ 通知。
     -->
-    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.NotifyTask">
+    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.NotifyTask">
         <id column="id" property="id"/>
         <result column="activity_id" property="activityId"/>
         <result column="team_id" property="teamId"/>
@@ -28,7 +28,7 @@
         事务内先把任务落表，后续再通过任务扫描或重试机制异步执行，
         这是典型的“本地消息表 / 最终一致性”做法。
     -->
-    <insert id="insert" parameterType="cn.bugstack.infrastructure.dao.po.NotifyTask">
+    <insert id="insert" parameterType="com.hjs.study.infrastructure.dao.po.NotifyTask">
         insert into notify_task(
         activity_id, team_id, notify_category, notify_type, notify_mq, notify_url,
         notify_count, notify_status, parameter_json, uuid, create_time, update_time)
@@ -59,21 +59,21 @@
         将通知任务更新为成功状态。
         同时 notify_count +1，表示本次执行已经发生过一次调用。
     -->
-    <update id="updateNotifyTaskStatusSuccess" parameterType="cn.bugstack.infrastructure.dao.po.NotifyTask">
+    <update id="updateNotifyTaskStatusSuccess" parameterType="com.hjs.study.infrastructure.dao.po.NotifyTask">
         update notify_task
         set notify_count = notify_count + 1, notify_status = 1, update_time = now()
         where team_id = #{teamId} and uuid = #{uuid}
     </update>
 
     <!-- 将通知任务更新为最终失败状态，并累加调用次数。 -->
-    <update id="updateNotifyTaskStatusError" parameterType="cn.bugstack.infrastructure.dao.po.NotifyTask">
+    <update id="updateNotifyTaskStatusError" parameterType="com.hjs.study.infrastructure.dao.po.NotifyTask">
         update notify_task
         set notify_count = notify_count + 1, notify_status = 3, update_time = now()
         where team_id = #{teamId} and uuid = #{uuid}
     </update>
 
     <!-- 将通知任务更新为待重试状态，并累加调用次数。 -->
-    <update id="updateNotifyTaskStatusRetry" parameterType="cn.bugstack.infrastructure.dao.po.NotifyTask">
+    <update id="updateNotifyTaskStatusRetry" parameterType="com.hjs.study.infrastructure.dao.po.NotifyTask">
         update notify_task
         set notify_count = notify_count + 1, notify_status = 2, update_time = now()
         where team_id = #{teamId} and uuid = #{uuid}

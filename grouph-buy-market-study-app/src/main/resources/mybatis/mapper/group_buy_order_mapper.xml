@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.bugstack.infrastructure.dao.IGroupBuyOrderDao">
+<mapper namespace="com.hjs.study.infrastructure.dao.IGroupBuyOrderDao">
 
     <!--
         group_buy_order 表结果映射。
         这张表表示“队伍主单”，关注的是拼团队伍整体状态，
         例如目标人数、锁单人数、已完成人数、队伍有效期和通知配置。
     -->
-    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.GroupBuyOrder">
+    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.GroupBuyOrder">
         <id column="id" property="id"/>
         <result column="team_id" property="teamId"/>
         <result column="activity_id" property="activityId"/>
@@ -32,7 +32,7 @@
         新增一条拼团队伍主单。
         开新团时会调用这里创建队伍记录，初始状态固定写为 0（拼单中）。
     -->
-    <insert id="insert" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrder">
+    <insert id="insert" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrder">
         insert into group_buy_order(
         team_id, activity_id, source, channel, original_price,
         deduction_price, pay_price, target_count, complete_count,
@@ -159,7 +159,7 @@
         未支付退单时回滚队伍锁单数。
         该 SQL 只允许处理仍处于拼单中的队伍。
     -->
-    <update id="unpaid2Refund" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrder">
+    <update id="unpaid2Refund" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrder">
         update group_buy_order
         set lock_count = lock_count + #{lockCount}, update_time= now()
         where
@@ -171,7 +171,7 @@
         已支付但未成团时的退单回滚。
         会同时调整锁单人数和已完成人数。
     -->
-    <update id="paid2Refund" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrder">
+    <update id="paid2Refund" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrder">
         update group_buy_order
         set lock_count = lock_count + #{lockCount},
         complete_count = complete_count + #{completeCount},
@@ -185,7 +185,7 @@
         已成团后发生退单，但队伍仍有其他有效成员时，
         将队伍更新为“完成含退单”状态。
     -->
-    <update id="paidTeam2Refund" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrder">
+    <update id="paidTeam2Refund" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrder">
         update group_buy_order
         set lock_count = lock_count + #{lockCount},
         complete_count = complete_count + #{completeCount},
@@ -199,7 +199,7 @@
         已成团后发生退单，且退款后队伍不再满足成团条件时，
         将队伍更新为失败状态。
     -->
-    <update id="paidTeam2RefundFail" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyOrder">
+    <update id="paidTeam2RefundFail" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyOrder">
         update group_buy_order
         set lock_count = lock_count + #{lockCount},
         complete_count = complete_count + #{completeCount},

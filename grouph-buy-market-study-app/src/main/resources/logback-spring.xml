@@ -103,30 +103,49 @@
         <appender-ref ref="ERROR_FILE"/>
     </appender>
 
-    <!-- 从 Spring 配置读取 Logstash 主机；缺失时回退到本机。 -->
-    <springProperty name="LOG_STASH_HOST" scope="context" source="logstash.host" defaultValue="127.0.0.1"/>
+    <springProfile name="prod">
+        <!-- 从 Spring 配置读取 Logstash 主机；缺失时回退到本机。 -->
+        <springProperty name="LOG_STASH_HOST" scope="context" source="logstash.host" defaultValue="127.0.0.1"/>
 
-    <!-- 将结构化 JSON 日志通过 TCP 4560 端口发送给 Logstash。 -->
-    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <!-- 目标端口需要与 Logstash input 插件监听端口保持一致。 -->
-        <destination>${LOG_STASH_HOST}:4560</destination>
-        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder"/>
-    </appender>
+        <!-- 将结构化 JSON 日志通过 TCP 4560 端口发送给 Logstash。 -->
+        <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <!-- 目标端口需要与 Logstash input 插件监听端口保持一致。 -->
+            <destination>${LOG_STASH_HOST}:4560</destination>
+            <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder"/>
+        </appender>
+    </springProfile>
 
     <!-- 仅 dev profile 生效的包级 DEBUG Logger。 -->
     <springProfile name="dev">
         <logger name="com.nmys.view" level="debug"/>
     </springProfile>
 
-    <!-- 根 Logger 将同一事件同时发往控制台、两个异步文件和 Logstash。 -->
-    <root level="info">
+    <!-- 本地和测试环境不连接未部署的 Logstash。 -->
+    <springProfile name="dev,test">
+        <root level="info">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE_INFO"/>
+            <appender-ref ref="ASYNC_FILE_ERROR"/>
+        </root>
+    </springProfile>
+
+    <!-- 生产环境保留结构化日志上报。 -->
+    <springProfile name="prod">
+        <root level="info">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE_INFO"/>
+            <appender-ref ref="ASYNC_FILE_ERROR"/>
+            <appender-ref ref="LOGSTASH"/>
+        </root>
+    </springProfile>
+
+    <!-- 未指定 Spring profile 时仍输出本地日志。 -->
+    <springProfile name="!dev &amp; !test &amp; !prod">
+        <root level="info">
         <appender-ref ref="CONSOLE"/>
-        <!-- 异步日志-INFO -->
         <appender-ref ref="ASYNC_FILE_INFO"/>
-        <!-- 异步日志-ERROR -->
         <appender-ref ref="ASYNC_FILE_ERROR"/>
-        <!-- 启用了 ELK 上报；如本地没有 Logstash，可注释此引用。 -->
-         <appender-ref ref="LOGSTASH"/>
-    </root>
+        </root>
+    </springProfile>
 
 </configuration>

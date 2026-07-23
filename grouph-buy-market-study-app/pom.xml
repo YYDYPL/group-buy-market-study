@@ -11,6 +11,10 @@
 
     <packaging>jar</packaging>
 
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
+
     <dependencies>
         <!-- Web 容器、Spring MVC 与 JSON 请求响应支持。 -->
         <dependency>
@@ -103,6 +107,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.3</version>
         </dependency>
 
         <!-- Actuator 暴露运行状态，Micrometer 将指标转换为 Prometheus 格式。 -->
@@ -156,7 +161,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.6</version>
                 <configuration>
-                    <skipTests>true</skipTests>
+                    <skipTests>${skipTests}</skipTests>
                     <testFailureIgnore>false</testFailureIgnore>
                     <includes>
                         <include>**/*Test.java</include>

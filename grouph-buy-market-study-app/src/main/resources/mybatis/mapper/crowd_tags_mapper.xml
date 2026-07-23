@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.bugstack.infrastructure.dao.ICrowdTagsDao">
+<mapper namespace="com.hjs.study.infrastructure.dao.ICrowdTagsDao">
 
     <!--
         crowd_tags 主表结果映射。
         这张表保存标签本身的元数据，例如标签名称、描述和覆盖人数统计。
     -->
-    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.CrowdTags">
+    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.CrowdTags">
         <id column="id" property="id"/>
         <result column="tag_id" property="tagId"/>
         <result column="tag_name" property="tagName"/>
@@ -21,7 +21,7 @@
         注意这里不是“直接设置 statistics = 某个值”，
         而是做增量更新，适合在批量导入用户后累计统计量。
     -->
-    <update id="updateCrowdTagsStatistics" parameterType="cn.bugstack.infrastructure.dao.po.CrowdTags">
+    <update id="updateCrowdTagsStatistics" parameterType="com.hjs.study.infrastructure.dao.po.CrowdTags">
         update crowd_tags
         set statistics = statistics + #{statistics}
         where tag_id = #{tagId}

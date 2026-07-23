@@ -28,9 +28,9 @@ thread:
 spring:
   datasource:
     # 账号、密码和地址在正式环境中应通过环境变量或配置中心覆盖，避免固化敏感信息。
-    username: root
-    password: 123456
-    url: jdbc:mysql://127.0.0.1:13306/group_buy_market?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&useSSL=true&sessionVariables=sql_mode='NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES'
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456}
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:13306}/${MYSQL_DATABASE:group_buy_market}?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&sessionVariables=sql_mode='NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES'
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
@@ -45,10 +45,10 @@ spring:
       connection-test-query: SELECT 1
   # RabbitMQ 连接、消费限流和业务消息拓扑参数。
   rabbitmq:
-    addresses: 192.168.1.108
-    port: 15672
-    username: admin
-    password: admin
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:admin}
+    password: ${RABBITMQ_PASSWORD:admin}
     listener:
       simple:
         prefetch: 1 # 单个消费者每次只预取 1 条未确认消息，降低慢任务造成的消息堆积。
@@ -82,8 +82,8 @@ mybatis:
 redis:
   sdk:
     config:
-      host: 192.168.1.108
-      port: 16379
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:16379}
       pool-size: 10
       min-idle-size: 5
       idle-timeout: 30000
@@ -99,8 +99,8 @@ xfg:
     config:
       system: group-buy-market
       register:
-        host: 192.168.1.108
-        port: 16379
+        host: ${REDIS_HOST:127.0.0.1}
+        port: ${REDIS_PORT:16379}
 
 # Logstash 服务地址，由 logback-spring.xml 的 TCP appender 读取。
 logstash:

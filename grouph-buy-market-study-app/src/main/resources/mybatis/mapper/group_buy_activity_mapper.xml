@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.bugstack.infrastructure.dao.IGroupBuyActivityDao">
+<mapper namespace="com.hjs.study.infrastructure.dao.IGroupBuyActivityDao">
 
     <!--
         group_buy_activity 表结果映射。
         这里描述的是拼团活动本身的核心规则，
         包括折扣方案、成团方式、活动时间和人群标签限制。
     -->
-    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.GroupBuyActivity">
+    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.GroupBuyActivity">
         <id column="id" property="id"/>
         <result column="activity_id" property="activityId"/>
         <result column="activity_name" property="activityName"/>
@@ -35,7 +35,7 @@
         当前表结构说明里未体现这两个字段，这里更像是早期或扩展版本的渠道活动路由查询。
         由于按 id 倒序并 limit 1，因此只取最新一条命中记录。
     -->
-    <select id="queryValidGroupBuyActivity" parameterType="cn.bugstack.infrastructure.dao.po.GroupBuyActivity"
+    <select id="queryValidGroupBuyActivity" parameterType="com.hjs.study.infrastructure.dao.po.GroupBuyActivity"
             resultMap="dataMap">
         select
         activity_id, activity_name, discount_id, group_type, take_limit_count,

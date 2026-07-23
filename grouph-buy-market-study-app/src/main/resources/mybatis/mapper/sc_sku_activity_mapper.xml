@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.bugstack.infrastructure.dao.ISCSkuActivityDao">
+<mapper namespace="com.hjs.study.infrastructure.dao.ISCSkuActivityDao">
 
     <!--
         sc_sku_activity 表结果映射。
         该表把“渠道 + 来源 + 商品”三元组路由到某个具体活动，
         是活动试算和锁单前的关键入口映射表。
     -->
-    <resultMap id="dataMap" type="cn.bugstack.infrastructure.dao.po.SCSkuActivity">
+    <resultMap id="dataMap" type="com.hjs.study.infrastructure.dao.po.SCSkuActivity">
         <id column="id" property="id"/>
         <result column="source" property="source"/>
         <result column="channel" property="channel"/>
@@ -21,7 +21,7 @@
         按 source + channel + goodsId 查询活动路由关系。
         命中后即可得到当前商品在指定渠道维度下应该参与哪个拼团活动。
     -->
-    <select id="querySCSkuActivityBySCGoodsId" parameterType="cn.bugstack.infrastructure.dao.po.SCSkuActivity" resultMap="dataMap">
+    <select id="querySCSkuActivityBySCGoodsId" parameterType="com.hjs.study.infrastructure.dao.po.SCSkuActivity" resultMap="dataMap">
         select source, channel, activity_id, goods_id
         from sc_sku_activity
         where goods_id = #{goodsId} and source = #{source} and channel = #{channel}

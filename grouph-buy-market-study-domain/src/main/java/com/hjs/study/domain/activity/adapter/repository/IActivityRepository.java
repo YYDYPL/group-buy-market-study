@@ -1,8 +1,10 @@
 package com.hjs.study.domain.activity.adapter.repository;
 
+import com.hjs.study.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
 import com.hjs.study.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.hjs.study.domain.activity.model.valobj.SCSkuActivityVO;
 import com.hjs.study.domain.activity.model.valobj.SkuVO;
+import com.hjs.study.domain.activity.model.valobj.TeamStatisticVO;
 
 import java.util.List;
 

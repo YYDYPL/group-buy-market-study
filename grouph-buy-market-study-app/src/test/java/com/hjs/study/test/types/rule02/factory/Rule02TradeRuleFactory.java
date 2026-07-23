@@ -1,10 +1,10 @@
 package com.hjs.study.test.types.rule02.factory;
 
-import cn.bugstack.test.types.rule02.logic.RuleLogic201;
-import cn.bugstack.test.types.rule02.logic.RuleLogic202;
-import cn.bugstack.test.types.rule02.logic.XxxResponse;
-import cn.bugstack.types.design.framework.link.model2.LinkArmory;
-import cn.bugstack.types.design.framework.link.model2.chain.BusinessLinkedList;
+import com.hjs.study.test.types.rule02.logic.RuleLogic201;
+import com.hjs.study.test.types.rule02.logic.RuleLogic202;
+import com.hjs.study.test.types.rule02.logic.XxxResponse;
+import com.hjs.study.types.design.framework.link.model2.LinkArmory;
+import com.hjs.study.types.design.framework.link.model2.chain.BusinessLinkedList;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
