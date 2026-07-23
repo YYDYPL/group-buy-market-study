@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>拼团全流程实验台</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="header-inner">
+        <div class="brand-block">
+            <span class="brand-mark">GB</span>
+            <div>
+                <h1>拼团全流程实验台</h1>
+                <p>Group Buy Market / Local Dev</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span id="apiStatus" class="connection-status is-idle"><span class="status-dot"></span>等待连接</span>
+            <button id="openSettingsButton" class="button button-secondary" type="button">连接配置</button>
+            <button id="resetButton" class="button button-quiet" type="button">重置本轮</button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="product-band">
+        <div class="content-grid product-grid">
+            <div class="product-media">
+                <img src="../html/images/sku-13811216-01.png" alt="手写 MyBatis 渐进式源码实践图书封面">
+            </div>
+            <div class="product-copy">
+                <div class="eyebrow-row">
+                    <span class="eyebrow">本地联调商品</span>
+                    <span id="activityBadge" class="activity-badge">活动待试算</span>
+                </div>
+                <h2>手写 MyBatis：渐进式源码实践</h2>
+                <p class="product-description">使用真实接口完成营销试算、三人锁单、支付结算、成团通知与逆向退款。</p>
+                <div class="price-line">
+                    <strong id="payPrice">--</strong>
+                    <span id="originalPrice">原价 --</span>
+                    <span id="deductionPrice" class="saving">优惠 --</span>
+                </div>
+                <div class="stat-strip" aria-label="活动统计">
+                    <div><span>累计开团</span><strong id="allTeamCount">--</strong></div>
+                    <div><span>已成团</span><strong id="allTeamCompleteCount">--</strong></div>
+                    <div><span>参与人次</span><strong id="allTeamUserCount">--</strong></div>
+                </div>
+                <div class="primary-actions">
+                    <button id="trialButton" class="button button-primary" type="button">开始商品试算</button>
+                    <button id="autoRunButton" class="button button-accent" type="button" disabled>自动执行至成团</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="workflow-band">
+        <div class="content-grid">
+            <ol id="workflowSteps" class="workflow-steps" aria-label="拼团流程进度">
+                <li data-step="trial"><span>1</span><div><strong>商品试算</strong><small>活动与价格</small></div></li>
+                <li data-step="lock"><span>2</span><div><strong>顺序锁单</strong><small>创建三人团</small></div></li>
+                <li data-step="settle"><span>3</span><div><strong>支付结算</strong><small>推进成团</small></div></li>
+                <li data-step="notify"><span>4</span><div><strong>成团通知</strong><small>RabbitMQ</small></div></li>
+                <li data-step="refund"><span>5</span><div><strong>逆向退款</strong><small>恢复业务状态</small></div></li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="operation-band">
+        <div class="content-grid operation-grid">
+            <div class="operation-main">
+                <div class="section-heading">
+                    <div>
+                        <span class="section-index">01</span>
+                        <h2>交易编排</h2>
+                    </div>
+                    <div class="team-mode" role="group" aria-label="组团方式">
+                        <input id="modeCreate" name="teamMode" type="radio" value="create" checked>
+                        <label for="modeCreate">发起新团</label>
+                        <input id="modeJoin" name="teamMode" type="radio" value="join">
+                        <label for="modeJoin">加入已有团</label>
+                    </div>
+                </div>
+
+                <div id="joinTeamPanel" class="join-team-panel" hidden>
+                    <label for="joinTeamId">目标团队 ID</label>
+                    <div class="inline-field">
+                        <input id="joinTeamId" type="text" inputmode="numeric" placeholder="试算后可从可参与团队中选择">
+                        <button id="useFirstTeamButton" class="button button-secondary" type="button">使用首个可参与团</button>
+                    </div>
+                </div>
+
+                <div class="team-summary">
+                    <div>
+                        <span>本轮团队</span>
+                        <strong id="currentTeamId">尚未创建</strong>
+                    </div>
+                    <div class="progress-block">
+                        <div class="progress-copy"><span>锁单进度</span><strong id="lockProgressText">0 / 3</strong></div>
+                        <div class="progress-track"><span id="lockProgressBar"></span></div>
+                    </div>
+                    <div class="progress-block">
+                        <div class="progress-copy"><span>结算进度</span><strong id="settleProgressText">0 / 3</strong></div>
+                        <div class="progress-track settle"><span id="settleProgressBar"></span></div>
+                    </div>
+                </div>
+
+                <div class="participant-toolbar">
+                    <p>参与者按列表顺序加入同一团队。交易号可在锁单前编辑。</p>
+                    <button id="addParticipantButton" class="button button-secondary" type="button">+ 添加参与者</button>
+                </div>
+
+                <div class="participant-table" role="table" aria-label="参与者交易列表">
+                    <div class="participant-header" role="row">
+                        <span>顺序 / 用户</span>
+                        <span>外部交易号</span>
+                        <span>业务状态</span>
+                        <span>订单信息</span>
+                        <span>操作</span>
+                    </div>
+                    <div id="participantRows"></div>
+                </div>
+
+                <div class="batch-actions">
+                    <button id="lockNextButton" class="button button-primary" type="button" disabled>锁定下一单</button>
+                    <button id="settleNextButton" class="button button-accent" type="button" disabled>结算下一单</button>
+                    <button id="refundNextButton" class="button button-danger" type="button" disabled>退款下一单</button>
+                </div>
+            </div>
+
+            <aside class="side-column">
+                <section class="observer-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="section-index">02</span>
+                            <h2>RabbitMQ 观察</h2>
+                        </div>
+                        <button id="refreshMqButton" class="icon-button" type="button" title="刷新队列统计" aria-label="刷新队列统计">&#8635;</button>
+                    </div>
+                    <p id="mqHint" class="panel-hint">结算成团及退款后，可在此核对消息发布、确认和积压。</p>
+                    <div class="queue-list">
+                        <div class="queue-item" data-queue="success">
+                            <div class="queue-title"><span class="queue-indicator success"></span><strong>成团通知</strong></div>
+                            <code>topic.team_success</code>
+                            <dl>
+                                <div><dt>发布</dt><dd id="successPublish">--</dd></div>
+                                <div><dt>确认</dt><dd id="successAck">--</dd></div>
+                                <div><dt>积压</dt><dd id="successMessages">--</dd></div>
+                            </dl>
+                        </div>
+                        <div class="queue-item" data-queue="refund">
+                            <div class="queue-title"><span class="queue-indicator refund"></span><strong>退款通知</strong></div>
+                            <code>topic.team_refund</code>
+                            <dl>
+                                <div><dt>发布</dt><dd id="refundPublish">--</dd></div>
+                                <div><dt>确认</dt><dd id="refundAck">--</dd></div>
+                                <div><dt>积压</dt><dd id="refundMessages">--</dd></div>
+                            </dl>
+                        </div>
+                    </div>
+                    <a id="rabbitConsoleLink" class="console-link" href="http://127.0.0.1:15672" target="_blank" rel="noreferrer">打开 RabbitMQ 管理台</a>
+                </section>
+
+                <section class="available-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="section-index">03</span>
+                            <h2>可参与团队</h2>
+                        </div>
+                    </div>
+                    <div id="availableTeams" class="available-teams">
+                        <p class="empty-state">完成试算后显示当前可参与团队。</p>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </section>
+
+    <section class="log-band">
+        <div class="content-grid">
+            <div class="section-heading log-heading">
+                <div>
+                    <span class="section-index">04</span>
+                    <h2>接口调用记录</h2>
+                </div>
+                <button id="clearLogButton" class="button button-quiet" type="button">清空记录</button>
+            </div>
+            <div id="requestLog" class="request-log">
+                <p class="empty-state">尚未发起接口请求。</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<dialog id="settingsDialog" class="settings-dialog">
+    <form method="dialog">
+        <div class="dialog-heading">
+            <div>
+                <span class="eyebrow">Local endpoints</span>
+                <h2>连接配置</h2>
+            </div>
+            <button class="icon-button" value="cancel" type="submit" aria-label="关闭配置" title="关闭">&#215;</button>
+        </div>
+        <div class="settings-grid">
+            <label>应用地址<input id="apiBaseInput" type="url" required></label>
+            <label>RabbitMQ 管理地址<input id="rabbitBaseInput" type="url" required></label>
+            <label>RabbitMQ 用户名<input id="rabbitUserInput" type="text" autocomplete="username"></label>
+            <label>RabbitMQ 密码<input id="rabbitPasswordInput" type="password" autocomplete="current-password"></label>
+            <label>商品 ID<input id="goodsIdInput" type="text" required></label>
+            <label>来源<input id="sourceInput" type="text" required></label>
+            <label>渠道<input id="channelInput" type="text" required></label>
+        </div>
+        <div class="dialog-actions">
+            <button class="button button-secondary" value="cancel" type="submit">取消</button>
+            <button id="saveSettingsButton" class="button button-primary" value="default" type="button">保存并检查</button>
+        </div>
+    </form>
+</dialog>
+
+<div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
