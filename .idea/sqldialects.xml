@@ -4,6 +4,36 @@
     <file url="file://$PROJECT_DIR$/docs/dev-ops/mysql/sql-bak/2-2-group_buy_market.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/docs/dev-ops/mysql/sql-bak/2-3-group_buy_market.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/docs/dev-ops/mysql/sql-bak/2-6-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/mysql/sql/2-29-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/mysql/sql/grafana.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/docs/dev-ops/mysql/sql/group_buy_market.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-10-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-11-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-12-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-13-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-14-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-15-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-16-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-17-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-18-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-19-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-2-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-26-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-27-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-28-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-29-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-3-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-4-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-5-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-6-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-7-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/2-9-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/dev-ops/sql-bak/3-3-group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/tag/v1.0/mysql/sql/group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/tag/v2.0/mysql/sql/group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/tag/v2.0/mysql/sql/s-pay-mall-ddd-market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/tag/v3.0/mysql/sql/grafana.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/tag/v3.0/mysql/sql/group_buy_market.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/docs/tag/v3.0/mysql/sql/s-pay-mall-ddd-market.sql" dialect="GenericSQL" />
   </component>
 </project>

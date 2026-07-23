@@ -37,3 +37,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Reasonix ###
+.reasonix/
+
+### Logs ###
+*.log
+data/log/
