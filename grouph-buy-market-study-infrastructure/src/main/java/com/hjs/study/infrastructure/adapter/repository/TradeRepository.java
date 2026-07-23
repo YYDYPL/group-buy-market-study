@@ -741,6 +741,7 @@ public class TradeRepository implements ITradeRepository {
                 .notifyMQ(notifyTask.getNotifyMQ())
                 .notifyCount(notifyTask.getNotifyCount())
                 .parameterJson(notifyTask.getParameterJson())
+                .uuid(notifyTask.getUuid())
                 .build();
     }
 

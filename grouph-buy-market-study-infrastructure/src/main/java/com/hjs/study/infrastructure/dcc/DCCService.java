@@ -1,6 +1,6 @@
 package com.hjs.study.infrastructure.dcc;
 
-import com.hjs.study.types.annotation.DCCValue;
+import cn.bugstack.wrench.dynamic.config.center.types.annotations.DCCValue;
 import com.hjs.study.types.common.Constants;
 import org.springframework.stereotype.Service;
 
