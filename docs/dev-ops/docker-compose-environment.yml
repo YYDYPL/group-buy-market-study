@@ -14,6 +14,8 @@ services:
     volumes:
       - dev-ops-mysql-data:/var/lib/mysql
       - ./mysql/sql/group_buy_market.sql:/docker-entrypoint-initdb.d/01-group_buy_market.sql:ro
+      - ./mysql/sql/3-0-product-admin-and-store.sql:/docker-entrypoint-initdb.d/02-product-admin-and-store.sql:ro
+      - ./mysql/sql/3-1-store-order-flow.sql:/docker-entrypoint-initdb.d/03-store-order-flow.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p123456"]
       interval: 5s

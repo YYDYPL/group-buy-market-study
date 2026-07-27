@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HJS 拼团 · 运营后台</title>
+    <link rel="icon" href="../images/placeholder-product.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-page">
+<aside class="sidebar">
+    <div class="admin-brand">
+        <span>拼</span>
+        <div><strong>HJS 拼团</strong><small>运营管理中心</small></div>
+    </div>
+    <nav>
+        <a class="active" href="#products"><i>▦</i>商品与活动</a>
+        <a href="../index.html"><i>⌂</i>查看商城</a>
+    </nav>
+    <div class="sidebar-tip">
+        <strong>配置发布提示</strong>
+        <p>先保存草稿并完成优惠试算，确认无误后再发布上线。</p>
+    </div>
+    <button id="logoutButton" class="logout" type="button">退出后台</button>
+</aside>
+
+<main class="admin-main">
+    <header class="admin-header">
+        <div>
+            <small>运营中心 / 商品配置</small>
+            <h1>商品与拼团活动</h1>
+        </div>
+        <button id="newProductButton" class="primary" type="button">＋ 新建商品</button>
+    </header>
+
+    <section class="dashboard-cards">
+        <div><span class="metric-icon red">商</span><p>商品总数<small>当前后台配置</small></p><strong id="totalMetric">--</strong></div>
+        <div><span class="metric-icon green">上</span><p>已上架<small>商城正在展示</small></p><strong id="onlineMetric">--</strong></div>
+        <div><span class="metric-icon amber">稿</span><p>待发布<small>活动草稿</small></p><strong id="draftMetric">--</strong></div>
+        <div><span class="metric-icon blue">团</span><p>活动商品<small>已配置拼团规则</small></p><strong id="activityMetric">--</strong></div>
+    </section>
+
+    <section id="products" class="panel">
+        <div class="panel-toolbar">
+            <div class="filter-row">
+                <input id="keywordFilter" type="search" placeholder="搜索商品ID或名称">
+                <select id="statusFilter">
+                    <option value="">全部状态</option>
+                    <option value="0">草稿</option>
+                    <option value="1">已上架</option>
+                    <option value="2">已下架</option>
+                </select>
+                <button id="searchButton" type="button">查询</button>
+            </div>
+            <button id="refreshAdminButton" class="ghost" type="button">↻ 刷新</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>商品</th><th>原价 / 拼团价</th><th>活动规则</th><th>商品状态</th><th>活动状态</th><th>版本</th><th>操作</th></tr></thead>
+                <tbody id="productTableBody"><tr><td colspan="7" class="loading-cell">正在加载配置...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <span id="pageSummary">第 1 页</span>
+            <div><button id="prevPage" type="button">上一页</button><button id="nextPage" type="button">下一页</button></div>
+        </div>
+    </section>
+</main>
+
+<div id="drawerBackdrop" class="drawer-backdrop"></div>
+<aside id="configDrawer" class="config-drawer" aria-hidden="true">
+    <header>
+        <div><small id="drawerKicker">新建配置</small><h2 id="drawerTitle">商品与活动配置</h2></div>
+        <button id="closeDrawer" type="button">×</button>
+    </header>
+    <form id="configForm">
+        <input id="version" name="version" type="hidden" value="0">
+
+        <section class="form-section">
+            <div class="section-title"><span>1</span><div><h3>商品资料</h3><p>商城列表和详情页展示的基础内容</p></div></div>
+            <div class="form-grid two">
+                <label>商品ID<input name="goodsId" maxlength="16" placeholder="例如 9890009" required></label>
+                <label>商品分类
+                    <select name="category">
+                        <option>生鲜水果</option><option>家清纸品</option><option>食品零食</option>
+                        <option>数码电器</option><option>家居生活</option><option>宠物用品</option>
+                        <option>学习办公</option><option>百货</option>
+                    </select>
+                </label>
+            </div>
+            <label>商品名称<input name="goodsName" maxlength="128" placeholder="填写清晰完整的商品标题" required></label>
+            <label>商品卖点<textarea name="subtitle" maxlength="256" rows="2" placeholder="一句话描述规格、产地或核心卖点"></textarea></label>
+            <div class="form-grid three">
+                <label>商品原价<input name="originalPrice" type="number" min="0.01" step="0.01" required></label>
+                <label>展示销量<input name="salesCount" type="number" min="0" step="1" value="0"></label>
+                <label>好评率 %<input name="favorableRate" type="number" min="0" max="100" step="0.01" value="99"></label>
+            </div>
+            <div class="form-grid two">
+                <label>排序权重<input name="sortOrder" type="number" step="1" value="0"></label>
+                <label>服务标签<input name="serviceTagsText" placeholder="全场包邮,正品保障,7天无理由"></label>
+            </div>
+            <label>商品主图 URL
+                <div class="image-input-row">
+                    <input name="mainImage" placeholder="images/products/xxx.png 或 https://..." required>
+                    <label class="upload-button">上传图片<input id="imageUpload" type="file" accept=".jpg,.jpeg,.png,.webp,image/*"></label>
+                </div>
+            </label>
+            <div class="image-preview-row">
+                <img id="imagePreview" alt="商品主图预览">
+                <p>支持 JPG、PNG、WebP，单张不超过 5MB；也可直接填写图片 URL。</p>
+            </div>
+            <label>轮播图 URL（每行一个）<textarea name="galleryImagesText" rows="3" placeholder="images/products/example.png"></textarea></label>
+        </section>
+
+        <section class="form-section">
+            <div class="section-title"><span>2</span><div><h3>优惠策略</h3><p>服务端将使用同一策略完成发布前试算和真实成交试算</p></div></div>
+            <div class="form-grid two">
+                <label>优惠名称<input name="discountName" placeholder="例如：双人尝鲜价" required></label>
+                <label>优惠类型<select name="discountType"><option value="0">基础优惠</option><option value="1">人群优惠</option></select></label>
+            </div>
+            <label>优惠说明<input name="discountDesc" placeholder="用于后台辨识优惠方案"></label>
+            <div class="form-grid two">
+                <label>优惠策略
+                    <select id="marketPlan" name="marketPlan">
+                        <option value="ZJ">直减</option><option value="MJ">满减</option>
+                        <option value="N">N元购</option><option value="ZK">折扣</option>
+                    </select>
+                </label>
+                <label>优惠表达式<input id="marketExpr" name="marketExpr" placeholder="例如 20" required><small id="exprHint">填写直减金额，例如 20</small></label>
+            </div>
+            <div id="trialCard" class="trial-card">
+                <div><small>原价</small><strong id="trialOriginal">¥--</strong></div>
+                <span>−</span><div><small>优惠</small><strong id="trialDeduction">¥--</strong></div>
+                <span>=</span><div class="result"><small>预计拼团价</small><strong id="trialPay">¥--</strong></div>
+                <p id="trialExplanation">填写价格和优惠表达式后点击试算</p>
+            </div>
+            <button id="trialButton" class="secondary" type="button">立即试算优惠</button>
+        </section>
+
+        <section class="form-section">
+            <div class="section-title"><span>3</span><div><h3>拼团活动</h3><p>定义成团人数、队伍有效时间和活动周期</p></div></div>
+            <label>活动名称<input name="activityName" placeholder="例如：草莓双人尝鲜团" required></label>
+            <div class="form-grid three">
+                <label>成团人数<input name="target" type="number" min="2" value="2" required></label>
+                <label>每人参与次数<input name="takeLimitCount" type="number" min="1" value="3" required></label>
+                <label>队伍有效分钟<input name="validTime" type="number" min="1" value="30" required></label>
+            </div>
+            <div class="form-grid two">
+                <label>活动开始<input name="startTime" type="datetime-local" required></label>
+                <label>活动结束<input name="endTime" type="datetime-local" required></label>
+            </div>
+            <div class="form-grid two">
+                <label>来源 source<input name="source" maxlength="8" value="s01" required></label>
+                <label>渠道 channel<input name="channel" maxlength="8" value="c01" required></label>
+            </div>
+        </section>
+
+        <div class="drawer-actions">
+            <button id="cancelEdit" type="button">取消</button>
+            <button id="saveDraftButton" class="primary" type="submit">保存为草稿</button>
+        </div>
+    </form>
+</aside>
+
+<div id="confirmModal" class="confirm-modal">
+    <div>
+        <span class="confirm-icon">!</span>
+        <h3 id="confirmTitle">确认操作</h3>
+        <p id="confirmMessage"></p>
+        <div><button id="confirmCancel" type="button">取消</button><button id="confirmOk" class="primary" type="button">确认</button></div>
+    </div>
+</div>
+
+<div id="toast" class="admin-toast"></div>
+<script src="../js/store-api.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

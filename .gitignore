@@ -44,3 +44,4 @@ build/
 ### Logs ###
 *.log
 data/log/
+docs/dev-ops/uploads/

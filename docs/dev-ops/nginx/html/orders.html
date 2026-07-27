@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#e02e24">
+    <title>我的拼团订单 - HJS 拼团</title>
+    <link rel="icon" href="images/placeholder-product.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="css/orders.css">
+</head>
+<body>
+<header class="orders-header">
+    <a href="index.html" aria-label="返回商城">‹</a>
+    <strong>我的拼团订单</strong>
+    <a id="switchUser" href="login.html" aria-label="切换用户">人</a>
+</header>
+
+<main class="orders-page">
+    <section class="user-summary">
+        <div id="userAvatar">H</div>
+        <p><span>当前模拟用户</span><strong id="userName">加载中</strong><code id="userId">--</code></p>
+        <a id="changeUser" href="login.html">切换</a>
+    </section>
+
+    <nav id="orderTabs" class="order-tabs" aria-label="订单状态">
+        <button class="active" data-status="">全部</button>
+        <button data-status="0">待支付</button>
+        <button data-status="1">已支付</button>
+        <button data-status="2">已关闭</button>
+    </nav>
+
+    <section id="orderList" class="order-list">
+        <div class="order-skeleton"></div>
+        <div class="order-skeleton"></div>
+    </section>
+    <div id="emptyOrders" class="empty-orders" hidden>
+        <b>暂无相关订单</b>
+        <span>去商城挑选一件好货发起拼团</span>
+        <a href="index.html">去逛商城</a>
+    </div>
+    <button id="loadMore" class="load-more" type="button" hidden>加载更多</button>
+</main>
+
+<div id="paymentModal" class="modal" aria-hidden="true">
+    <div class="modal-panel">
+        <button class="modal-close" type="button" data-close-modal>×</button>
+        <span>模拟收银台</span>
+        <h2>确认支付</h2>
+        <strong id="paymentAmount">¥0.00</strong>
+        <dl>
+            <div><dt>商品</dt><dd id="paymentGoods">--</dd></div>
+            <div><dt>交易单号</dt><dd id="paymentTradeNo">--</dd></div>
+        </dl>
+        <div class="modal-actions">
+            <button type="button" data-close-modal>稍后支付</button>
+            <button id="confirmPayment" type="button">我已完成支付</button>
+        </div>
+    </div>
+</div>
+
+<div id="teamModal" class="modal" aria-hidden="true">
+    <div class="modal-panel team-panel">
+        <button class="modal-close" type="button" data-close-team>×</button>
+        <span>TEAM DETAIL</span>
+        <h2>团队成员与进度</h2>
+        <div id="teamDetail"></div>
+    </div>
+</div>
+
+<div id="toast" class="toast" role="status"></div>
+<script src="js/store-identity.js"></script>
+<script src="js/store-api.js"></script>
+<script src="js/orders.js"></script>
+</body>
+</html>

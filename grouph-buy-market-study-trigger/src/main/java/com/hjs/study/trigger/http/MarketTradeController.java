@@ -8,7 +8,6 @@ import com.hjs.study.domain.activity.model.entity.TrialBalanceEntity;
 import com.hjs.study.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.hjs.study.domain.activity.service.IIndexGroupBuyMarketService;
 import com.hjs.study.domain.trade.model.entity.*;
-import com.hjs.study.domain.trade.model.valobj.GroupBuyProgressVO;
 import com.hjs.study.domain.trade.model.valobj.NotifyConfigVO;
 import com.hjs.study.domain.trade.model.valobj.NotifyTypeEnumVO;
 import com.hjs.study.domain.trade.model.valobj.TradeOrderStatusEnumVO;
@@ -16,6 +15,7 @@ import com.hjs.study.domain.trade.service.ITradeLockOrderService;
 import com.hjs.study.domain.trade.service.ITradeRefundOrderService;
 import com.hjs.study.domain.trade.service.ITradeSettlementOrderService;
 import com.hjs.study.types.enums.ResponseCode;
+import com.hjs.study.types.enums.GroupBuyOrderEnumVO;
 import com.hjs.study.types.exception.AppException;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +88,13 @@ public class MarketTradeController implements IMarketTradeService {
             log.info("营销交易锁单:{} LockMarketPayOrderRequestDTO:{}", userId, JSON.toJSONString(requestDTO));
 
             // 基础业务上下文必须完整；选择 HTTP 通知时，回调地址也是必填项。
-            if (StringUtils.isBlank(userId) || StringUtils.isBlank(source) || StringUtils.isBlank(channel) || StringUtils.isBlank(goodsId) || null == activityId || ("HTTP".equals(notifyConfigVO.getNotifyType()) && StringUtils.isBlank(notifyConfigVO.getNotifyUrl()))) {
+            boolean invalidNotify = null == notifyConfigVO
+                    || StringUtils.isBlank(notifyConfigVO.getNotifyType())
+                    || (!"MQ".equals(notifyConfigVO.getNotifyType()) && !"HTTP".equals(notifyConfigVO.getNotifyType()))
+                    || ("HTTP".equals(notifyConfigVO.getNotifyType()) && StringUtils.isBlank(notifyConfigVO.getNotifyUrl()));
+            if (StringUtils.isBlank(userId) || StringUtils.isBlank(source)
+                    || StringUtils.isBlank(channel) || StringUtils.isBlank(goodsId)
+                    || null == activityId || StringUtils.isBlank(outTradeNo) || invalidNotify) {
                 return Response.<LockMarketPayOrderResponseDTO>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
                         .info(ResponseCode.ILLEGAL_PARAMETER.getInfo())
@@ -104,6 +110,7 @@ public class MarketTradeController implements IMarketTradeService {
                         .deductionPrice(marketPayOrderEntity.getDeductionPrice())
                         .payPrice(marketPayOrderEntity.getPayPrice())
                         .tradeOrderStatus(marketPayOrderEntity.getTradeOrderStatusEnumVO().getCode())
+                        .teamId(marketPayOrderEntity.getTeamId())
                         .build();
 
                 log.info("交易锁单记录(存在):{} marketPayOrderEntity:{}", userId, JSON.toJSONString(marketPayOrderEntity));
@@ -116,12 +123,18 @@ public class MarketTradeController implements IMarketTradeService {
 
             // 加入已有队伍前先做快速容量校验，避免已满队伍继续进入后续试算和锁单流程。
             if (StringUtils.isNotBlank(teamId)) {
-                GroupBuyProgressVO groupBuyProgressVO = tradeOrderService.queryGroupBuyProgress(teamId);
-                if (null != groupBuyProgressVO && Objects.equals(groupBuyProgressVO.getTargetCount(), groupBuyProgressVO.getLockCount())) {
-                    log.info("交易锁单拦截-拼单目标已达成:{} {}", userId, teamId);
+                GroupBuyTeamEntity team = tradeOrderService.queryGroupBuyTeamByTeamId(teamId);
+                boolean unavailable = null == team
+                        || !Objects.equals(activityId, team.getActivityId())
+                        || !GroupBuyOrderEnumVO.PROGRESS.equals(team.getStatus())
+                        || null == team.getValidEndTime()
+                        || !team.getValidEndTime().after(new java.util.Date())
+                        || team.getLockCount() >= team.getTargetCount();
+                if (unavailable) {
+                    log.info("交易锁单拦截-队伍不可加入 userId:{} teamId:{} activityId:{}", userId, teamId, activityId);
                     return Response.<LockMarketPayOrderResponseDTO>builder()
                             .code(ResponseCode.E0006.getCode())
-                            .info(ResponseCode.E0006.getInfo())
+                            .info("拼团队伍不存在、已结束或名额已满")
                             .build();
                 }
             }

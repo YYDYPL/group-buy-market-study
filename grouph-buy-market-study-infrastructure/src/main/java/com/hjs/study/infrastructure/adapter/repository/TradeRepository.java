@@ -15,6 +15,7 @@ import com.hjs.study.infrastructure.dao.po.GroupBuyActivity;
 import com.hjs.study.infrastructure.dao.po.GroupBuyOrder;
 import com.hjs.study.infrastructure.dao.po.GroupBuyOrderList;
 import com.hjs.study.infrastructure.dao.po.NotifyTask;
+import com.hjs.study.infrastructure.dao.po.StoreOrder;
 import com.hjs.study.infrastructure.dcc.DCCService;
 import com.hjs.study.infrastructure.redis.IRedisService;
 import com.hjs.study.types.common.Constants;
@@ -273,6 +274,7 @@ public class TradeRepository implements ITradeRepository {
     @Override
     public GroupBuyTeamEntity queryGroupBuyTeamByTeamId(String teamId) {
         GroupBuyOrder groupBuyOrder = groupBuyOrderDao.queryGroupBuyTeamByTeamId(teamId);
+        if (null == groupBuyOrder) return null;
         return GroupBuyTeamEntity.builder()
                 .teamId(groupBuyOrder.getTeamId())
                 .activityId(groupBuyOrder.getActivityId())
@@ -838,6 +840,96 @@ public class TradeRepository implements ITradeRepository {
         }
         
         return userGroupBuyOrderDetailEntities;
+    }
+
+    @Override
+    public List<StoreOrderEntity> queryStoreOrders(
+            String userId, String goodsId, Integer status, Integer offset, Integer pageSize) {
+        StoreOrder query = StoreOrder.builder()
+                .userId(userId)
+                .goodsId(goodsId)
+                .status(status)
+                .offset(offset)
+                .pageSize(pageSize)
+                .build();
+        List<StoreOrder> records = groupBuyOrderListDao.queryStoreOrders(query);
+        if (null == records || records.isEmpty()) return new ArrayList<>();
+        return records.stream().map(this::toStoreOrderEntity).collect(Collectors.toList());
+    }
+
+    @Override
+    public Integer countStoreOrders(String userId, String goodsId, Integer status) {
+        Integer count = groupBuyOrderListDao.countStoreOrders(StoreOrder.builder()
+                .userId(userId)
+                .goodsId(goodsId)
+                .status(status)
+                .build());
+        return null == count ? 0 : count;
+    }
+
+    @Override
+    public StoreTeamEntity queryStoreTeam(String teamId) {
+        GroupBuyOrder team = groupBuyOrderDao.queryGroupBuyTeamByTeamId(teamId);
+        if (null == team) return null;
+
+        List<StoreOrder> records = groupBuyOrderListDao.queryStoreTeamMembers(teamId);
+        List<StoreTeamEntity.Member> members = new ArrayList<>();
+        if (null != records) {
+            for (StoreOrder record : records) {
+                members.add(StoreTeamEntity.Member.builder()
+                        .userId(record.getUserId())
+                        .orderId(record.getOrderId())
+                        .outTradeNo(record.getOutTradeNo())
+                        .orderStatus(record.getOrderStatus())
+                        .outTradeTime(record.getOutTradeTime())
+                        .createTime(record.getCreateTime())
+                        .build());
+            }
+        }
+
+        return StoreTeamEntity.builder()
+                .teamId(team.getTeamId())
+                .activityId(team.getActivityId())
+                .source(team.getSource())
+                .channel(team.getChannel())
+                .originalPrice(team.getOriginalPrice())
+                .deductionPrice(team.getDeductionPrice())
+                .payPrice(team.getPayPrice())
+                .targetCount(team.getTargetCount())
+                .completeCount(team.getCompleteCount())
+                .lockCount(team.getLockCount())
+                .status(team.getStatus())
+                .validStartTime(team.getValidStartTime())
+                .validEndTime(team.getValidEndTime())
+                .members(members)
+                .build();
+    }
+
+    private StoreOrderEntity toStoreOrderEntity(StoreOrder record) {
+        return StoreOrderEntity.builder()
+                .userId(record.getUserId())
+                .orderId(record.getOrderId())
+                .outTradeNo(record.getOutTradeNo())
+                .goodsId(record.getGoodsId())
+                .goodsName(record.getGoodsName())
+                .mainImage(record.getMainImage())
+                .activityId(record.getActivityId())
+                .teamId(record.getTeamId())
+                .source(record.getSource())
+                .channel(record.getChannel())
+                .originalPrice(record.getOriginalPrice())
+                .deductionPrice(record.getDeductionPrice())
+                .payPrice(record.getPayPrice())
+                .orderStatus(record.getOrderStatus())
+                .outTradeTime(record.getOutTradeTime())
+                .createTime(record.getCreateTime())
+                .updateTime(record.getUpdateTime())
+                .teamStatus(record.getTeamStatus())
+                .targetCount(record.getTargetCount())
+                .completeCount(record.getCompleteCount())
+                .lockCount(record.getLockCount())
+                .validEndTime(record.getValidEndTime())
+                .build();
     }
 
 }

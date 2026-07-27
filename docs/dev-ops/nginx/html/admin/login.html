@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HJS 拼团 · 运营后台登录</title>
+    <link rel="icon" href="../images/placeholder-product.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-login-page">
+<main class="admin-login-card">
+    <div class="admin-brand large">
+        <span>拼</span>
+        <div><strong>HJS 拼团运营台</strong><small>商品 · 优惠 · 拼团活动一站式配置</small></div>
+    </div>
+    <div class="login-intro">
+        <span>安全访问</span>
+        <h1>欢迎回来</h1>
+        <p>请输入部署环境中配置的管理令牌。令牌只在当前浏览器标签会话中保存。</p>
+    </div>
+    <form id="adminLoginForm">
+        <label for="adminToken">管理令牌</label>
+        <div class="token-input">
+            <input id="adminToken" type="password" autocomplete="current-password" placeholder="GBM_ADMIN_TOKEN" required>
+            <button id="toggleToken" type="button">显示</button>
+        </div>
+        <p id="loginError" class="form-error"></p>
+        <button id="loginButton" class="primary wide" type="submit">验证并进入后台</button>
+    </form>
+    <a class="back-store" href="../index.html">← 返回商城首页</a>
+</main>
+<script src="../js/store-api.js"></script>
+<script>
+    const form = document.getElementById("adminLoginForm");
+    const tokenInput = document.getElementById("adminToken");
+    const errorBox = document.getElementById("loginError");
+    const button = document.getElementById("loginButton");
+    document.getElementById("toggleToken").addEventListener("click", event => {
+        const visible = tokenInput.type === "text";
+        tokenInput.type = visible ? "password" : "text";
+        event.target.textContent = visible ? "显示" : "隐藏";
+    });
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+        errorBox.textContent = "";
+        button.disabled = true;
+        button.textContent = "正在验证...";
+        const token = tokenInput.value.trim();
+        try {
+            const response = await fetch(`${StoreApi.apiBaseUrl}/api/v1/gbm/admin/auth/verify`, {
+                headers: {"X-Admin-Token": token}
+            });
+            const payload = await response.json();
+            if (!response.ok || payload.code !== "0000") throw new Error(payload.info || "管理令牌无效");
+            sessionStorage.setItem("gbmAdminToken", token);
+            location.href = "index.html";
+        } catch (error) {
+            errorBox.textContent = error.message;
+        } finally {
+            button.disabled = false;
+            button.textContent = "验证并进入后台";
+        }
+    });
+</script>
+</body>
+</html>

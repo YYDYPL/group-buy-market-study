@@ -17,6 +17,8 @@ public enum ResponseCode {
     UPDATE_ZERO("0004", "更新记录为0"),
     HTTP_EXCEPTION("0005", "HTTP接口调用异常"),
     RATE_LIMITER("0006", "接口限流"),
+    CONFLICT("0007", "配置版本冲突"),
+    UNAUTHORIZED("0401", "未授权"),
 
     // 业务异常码E000X
     E0001("E0001", "不存在对应的折扣计算服务"),

@@ -1,6 +1,6 @@
 # hjs-group-buy-market-study
 
-一个基于 Java 8、Spring Boot 2.7 和领域驱动设计（DDD）的拼团交易学习项目。项目覆盖商品营销试算、发起拼团、加入拼团、交易锁单、支付结算、成团通知、逆向退款和补偿任务，并提供一套可直接操作真实接口的本地前端实验台。
+一个基于 Java 8、Spring Boot 2.7 和领域驱动设计（DDD）的拼团商城项目。项目覆盖数据库驱动的商品商城、运营配置后台、营销试算、交易锁单、支付结算、成团通知、逆向退款和补偿任务。
 
 ## 核心能力
 
@@ -8,10 +8,14 @@
 - 支持发起新团或加入已有团队，并通过外部交易号保证锁单幂等。
 - 支持支付成功后的订单结算、团队进度推进和成团判断。
 - 支持未支付释放、已支付退款和成团后退款等逆向流程。
+- 支持在浏览器注册和切换多个本地模拟用户，通过邀请链接完成多人参团。
+- 提供独立锁单待支付阶段、订单中心、团队成员详情、继续支付和退款入口。
 - 通过 RabbitMQ 发布成团和退款事件，并保留通知任务补偿机制。
 - 使用 Redis 实现动态配置、限流配置、分布式锁和业务缓存。
 - 使用 MyBatis、MySQL 保存活动、优惠、团队订单和通知任务。
-- 提供 Actuator 健康检查、Prometheus 指标和本地全流程前端。
+- 提供商品草稿、优惠试算、发布、下架、废弃、乐观锁和渠道切换。
+- 提供管理令牌鉴权、安全图片上传、移动商城、商品详情和运营后台。
+- 提供 Actuator 健康检查、Prometheus 指标和本地全流程实验台。
 
 ## 技术栈
 
@@ -32,7 +36,8 @@
 flowchart LR
     A["商品试算"] --> B["发起新团或加入团队"]
     B --> C["交易锁单"]
-    C --> D["支付结算"]
+    C --> C1["待支付订单"]
+    C1 --> D["确认支付并结算"]
     D --> E{"是否达到目标人数"}
     E -- "否" --> C
     E -- "是" --> F["成团通知"]
@@ -55,8 +60,9 @@ grouph-buy-market-study
 └── docs
     ├── changes                            # 每次项目改动记录
     ├── dev-ops                            # Docker Compose、SQL 和中间件配置
+    │   └── nginx/html                     # 商城、商品详情和运营后台
     ├── documents                          # 设计与学习文档
-    └── ui/group-buy-flow                  # 拼团全流程前端
+    └── ui/group-buy-flow                  # 独立的交易链路实验台
 ```
 
 模块依赖遵循“触发器调用领域服务、领域层依赖抽象、基础设施实现抽象”的方向，HTTP DTO 与领域实体保持隔离。
@@ -72,7 +78,9 @@ Docker Compose 中的服务只绑定本机回环地址。
 | Redis | `127.0.0.1:16379` | - | 无密码 |
 | RabbitMQ AMQP | `127.0.0.1:5672` | `admin` | `admin` |
 | RabbitMQ 管理台 | `http://127.0.0.1:15672` | `admin` | `admin` |
-| 拼团前端 | `http://127.0.0.1:4173/group-buy-flow/` | - | - |
+| 拼团商城 | `http://127.0.0.1:4173/` | - | - |
+| 运营后台 | `http://127.0.0.1:4173/admin/login.html` | 管理令牌 | `GBM_ADMIN_TOKEN` |
+| 交易实验台 | `http://127.0.0.1:4174/group-buy-flow/` | - | - |
 
 这些账号仅用于本机开发，不应直接用于生产环境。
 
@@ -110,13 +118,20 @@ docker compose -f docs/dev-ops/docker-compose-environment.yml up -d
 docker compose -f docs/dev-ops/docker-compose-environment.yml ps
 ```
 
-Compose 会启动 MySQL、Redis、RabbitMQ 三个容器，并使用命名卷保存数据。MySQL 命名卷第一次创建时会自动执行：
+Compose 会启动 MySQL、Redis、RabbitMQ 三个容器，并使用命名卷保存数据。MySQL 命名卷第一次创建时会按顺序执行：
 
 ```text
 docs/dev-ops/mysql/sql/group_buy_market.sql
+docs/dev-ops/mysql/sql/3-0-product-admin-and-store.sql
+docs/dev-ops/mysql/sql/3-1-store-order-flow.sql
 ```
 
-已有 MySQL 命名卷不会重复执行初始化脚本，也不会覆盖其他数据库。
+第二个脚本会幂等扩展商品展示与后台配置字段，并导入 8 款演示商品、优惠、活动和 `s01/c01` 映射；第三个脚本为订单中心的团队成员查询补充索引。已有 MySQL 命名卷不会自动重放初始化目录，可手动执行：
+
+```powershell
+docker exec mysql sh -lc "mysql --default-character-set=utf8mb4 -uroot -p123456 < /docker-entrypoint-initdb.d/02-product-admin-and-store.sql"
+docker exec mysql sh -lc "mysql --default-character-set=utf8mb4 -uroot -p123456 < /docker-entrypoint-initdb.d/03-store-order-flow.sql"
+```
 
 ### 3. 编译项目
 
@@ -137,13 +152,16 @@ grouph-buy-market-study-app/target/grouph-buy-market-study-app.jar
 1. 将 Project SDK 设置为 JDK 8。
 2. 在 Maven 面板执行 `Reload All Maven Projects`。
 3. 打开 `grouph-buy-market-study-app/src/main/java/com/hjs/study/Application.java`。
-4. 点击 `main` 方法左侧的运行按钮。
+4. 在 Run Configuration 的 Environment variables 中设置 `GBM_ADMIN_TOKEN`，例如 `GBM_ADMIN_TOKEN=hjs-local-admin-token`。
+5. 点击 `main` 方法左侧的运行按钮。
 
 默认配置已经启用 `dev` Profile，不需要额外填写启动参数。
 
 #### 使用命令行
 
 ```powershell
+$env:GBM_ADMIN_TOKEN = "hjs-local-admin-token"
+$env:GBM_UPLOAD_DIR = "$PWD/docs/dev-ops/uploads"
 java -jar grouph-buy-market-study-app/target/grouph-buy-market-study-app.jar
 ```
 
@@ -160,24 +178,38 @@ Invoke-RestMethod http://127.0.0.1:8091/actuator/health
 在仓库根目录新开一个终端：
 
 ```powershell
-py -m http.server 4173 --bind 127.0.0.1 --directory docs/ui
+py -m http.server 4173 --bind 127.0.0.1 --directory docs/dev-ops/nginx/html
 ```
 
 浏览器访问：
 
 ```text
-http://127.0.0.1:4173/group-buy-flow/
+商城：http://127.0.0.1:4173/
+模拟用户中心：http://127.0.0.1:4173/login.html
+我的订单：http://127.0.0.1:4173/orders.html
+后台：http://127.0.0.1:4173/admin/login.html
 ```
 
-前端默认连接 `8091` 的后端和 `15672` 的 RabbitMQ 管理接口。页面可以完成：
+商城与后台默认连接本机 `8091` 后端。商城支持搜索、分类、排序、商品详情和完整拼团交易。推荐按以下顺序体验：
 
-1. 商品试算。
-2. 创建三位测试用户。
-3. 顺序锁定三笔订单。
-4. 顺序完成支付结算并触发成团。
-5. 查看 RabbitMQ 发布、确认和积压统计。
-6. 对已结算订单执行退款。
-7. 查看每次接口调用的请求、响应和耗时。
+1. 在模拟用户中心注册用户 A、B、C。
+2. 使用用户 A 打开商品详情并发起拼团，锁单后订单保持“待支付”。
+3. 复制邀请链接，切换用户 B、C 后分别打开链接并加入同一个团队。
+4. 在商品详情或“我的订单”中让三名用户分别确认支付，最后一人结算后成团。
+5. 在订单中心验证未支付取消、成团前退款或成团后退款。
+
+运营后台支持：
+
+1. 使用 `GBM_ADMIN_TOKEN` 登录。
+2. 维护商品资料、主图、轮播图和服务标签。
+3. 配置直减、满减、N 元购或折扣策略并试算。
+4. 保存草稿、发布活动、下架商品或废弃草稿。
+
+需要集中观察 RabbitMQ 累计指标或批量实验交易参数时，可另开终端启动交易实验台：
+
+```powershell
+py -m http.server 4174 --bind 127.0.0.1 --directory docs/ui
+```
 
 ## HTTP API
 
@@ -188,7 +220,19 @@ http://127.0.0.1:4173/group-buy-flow/
 | `POST` | `/api/v1/gbm/trade/settlement_market_pay_order` | 支付成功后的订单结算 |
 | `POST` | `/api/v1/gbm/trade/refund_market_pay_order` | 释放锁单或退款 |
 | `GET` | `/api/v1/gbm/dcc/update_config` | 发布动态配置变更 |
+| `GET` | `/api/v1/gbm/store/products` | 查询已上架商品 |
+| `GET` | `/api/v1/gbm/store/products/{goodsId}` | 查询商城商品详情 |
+| `GET` | `/api/v1/gbm/store/users/{userId}/orders` | 分页查询模拟用户订单 |
+| `GET` | `/api/v1/gbm/store/teams/{teamId}` | 查询团队进度和成员状态 |
+| `GET` | `/api/v1/gbm/admin/products` | 分页查询后台配置 |
+| `POST` | `/api/v1/gbm/admin/products/trial` | 优惠策略试算 |
+| `POST` | `/api/v1/gbm/admin/products/draft` | 保存组合配置草稿 |
+| `POST` | `/api/v1/gbm/admin/products/{goodsId}/publish` | 发布草稿 |
+| `POST` | `/api/v1/gbm/admin/products/{goodsId}/offline` | 下架商品 |
+| `POST` | `/api/v1/gbm/admin/images` | 上传商品图片 |
 | `GET` | `/actuator/health` | 应用与中间件健康检查 |
+
+`/api/v1/gbm/admin/**` 必须携带请求头 `X-Admin-Token`。令牌只保存在后台页面的 `sessionStorage`，服务端未配置令牌时管理接口默认关闭。
 
 统一业务响应结构：
 
@@ -289,12 +333,16 @@ curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=rateLimiterSwitch&v
 | `RABBITMQ_PORT` | `5672` | RabbitMQ AMQP 端口 |
 | `RABBITMQ_USERNAME` | `admin` | RabbitMQ 用户名 |
 | `RABBITMQ_PASSWORD` | `admin` | RabbitMQ 密码 |
+| `GBM_ADMIN_TOKEN` | 空 | 运营后台管理令牌；为空时后台接口关闭 |
+| `GBM_UPLOAD_DIR` | `./uploads` | 商品图片上传目录 |
 
 PowerShell 示例：
 
 ```powershell
 $env:MYSQL_PASSWORD = "new-password"
 $env:RABBITMQ_PASSWORD = "new-password"
+$env:GBM_ADMIN_TOKEN = "hjs-local-admin-token"
+$env:GBM_UPLOAD_DIR = "$PWD/docs/dev-ops/uploads"
 java -jar grouph-buy-market-study-app/target/grouph-buy-market-study-app.jar
 ```
 
@@ -319,7 +367,16 @@ docker compose -f docs/dev-ops/docker-compose-environment.yml config
 # 编译全部 Maven 模块
 mvn clean -DskipTests package
 
-# 检查前端 JavaScript 语法
+# 检查商城与后台 JavaScript 语法
+node --check docs/dev-ops/nginx/html/js/store-api.js
+node --check docs/dev-ops/nginx/html/js/store-identity.js
+node --check docs/dev-ops/nginx/html/js/index.js
+node --check docs/dev-ops/nginx/html/js/login.js
+node --check docs/dev-ops/nginx/html/js/product-detail.js
+node --check docs/dev-ops/nginx/html/js/orders.js
+node --check docs/dev-ops/nginx/html/admin/js/admin.js
+
+# 检查交易实验台 JavaScript 语法
 node --check docs/ui/group-buy-flow/app.js
 
 # 检查应用健康状态
@@ -355,7 +412,7 @@ docker compose -f docs/dev-ops/docker-compose-environment.yml stop
 ### 端口已被占用
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8091,4173,13306,16379,5672,15672 -ErrorAction SilentlyContinue |
+Get-NetTCPConnection -LocalPort 8091,4173,4174,13306,16379,5672,15672 -ErrorAction SilentlyContinue |
   Select-Object LocalPort, State, OwningProcess
 ```
 
@@ -367,11 +424,11 @@ Get-NetTCPConnection -LocalPort 8091,4173,13306,16379,5672,15672 -ErrorAction Si
 
 ### RabbitMQ 队列看不到消息
 
-应用启动后会自动声明交换机、路由和两个业务队列。消费者在线时，消息会快速完成投递和确认，管理台列表中的当前积压会保持为零。使用前端右侧的 RabbitMQ 观察区域查看累计数据。
+应用启动后会自动声明交换机、路由和两个业务队列。消费者在线时，消息会快速完成投递和确认，管理台列表中的当前积压会保持为零。累计 `publish` 和 `ack` 可在 RabbitMQ 管理台或独立交易实验台中查看。
 
 ### 数据库没有初始化
 
-初始化 SQL 只在 MySQL 命名卷首次创建时自动执行。先检查 `group_buy_market` 数据库是否存在，以及当前 Compose 是否复用了历史命名卷。不要为了重新导入业务库而直接删除包含其他项目数据的共享卷。
+初始化 SQL 只在 MySQL 命名卷首次创建时自动执行。先检查 `group_buy_market` 数据库是否存在，以及当前 Compose 是否复用了历史命名卷；已有卷可手动重复执行幂等升级脚本。不要为了重新导入业务库而直接删除包含其他项目数据的共享卷。
 
 ### 前端无法调用后端
 

@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hjs.study.infrastructure.dao.IProductConfigDao">
+
+    <resultMap id="productConfigMap" type="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        <id column="goods_id" property="goodsId"/>
+        <result column="goods_name" property="goodsName"/>
+        <result column="original_price" property="originalPrice"/>
+        <result column="category" property="category"/>
+        <result column="subtitle" property="subtitle"/>
+        <result column="main_image" property="mainImage"/>
+        <result column="gallery_images" property="galleryImages"/>
+        <result column="sales_count" property="salesCount"/>
+        <result column="favorable_rate" property="favorableRate"/>
+        <result column="service_tags" property="serviceTags"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="product_status" property="productStatus"/>
+        <result column="version" property="version"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="activity_name" property="activityName"/>
+        <result column="discount_id" property="discountId"/>
+        <result column="group_type" property="groupType"/>
+        <result column="take_limit_count" property="takeLimitCount"/>
+        <result column="target" property="target"/>
+        <result column="valid_time" property="validTime"/>
+        <result column="activity_status" property="activityStatus"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="discount_name" property="discountName"/>
+        <result column="discount_desc" property="discountDesc"/>
+        <result column="discount_type" property="discountType"/>
+        <result column="market_plan" property="marketPlan"/>
+        <result column="market_expr" property="marketExpr"/>
+        <result column="tag_id" property="tagId"/>
+        <result column="source" property="source"/>
+        <result column="channel" property="channel"/>
+    </resultMap>
+
+    <sql id="aggregateColumns">
+        s.goods_id,
+        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.goodsName')), s.goods_name) AS goods_name,
+        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.originalPrice')) AS DECIMAL(10,2)), s.original_price) AS original_price,
+        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.category')), s.category) AS category,
+        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.subtitle')), s.subtitle) AS subtitle,
+        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.mainImage')), s.main_image) AS main_image,
+        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.galleryImages')), CAST(s.gallery_images AS CHAR)) AS gallery_images,
+        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.salesCount')) AS SIGNED), s.sales_count) AS sales_count,
+        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.favorableRate')) AS DECIMAL(5,2)), s.favorable_rate) AS favorable_rate,
+        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.serviceTags')), CAST(s.service_tags AS CHAR)) AS service_tags,
+        COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.sortOrder')) AS SIGNED), s.sort_order) AS sort_order,
+        s.status AS product_status, s.version,
+        a.activity_id, a.activity_name, a.discount_id, a.group_type,
+        a.take_limit_count, a.target, a.valid_time, a.status AS activity_status,
+        a.start_time, a.end_time,
+        d.discount_name, d.discount_desc, d.discount_type, d.market_plan,
+        d.market_expr, d.tag_id,
+        COALESCE(a.source, s.source) AS source,
+        COALESCE(a.channel, s.channel) AS channel
+    </sql>
+
+    <!-- 商城只读取已上架、路由启用、活动生效且位于有效期内的商品。 -->
+    <select id="queryStoreProductList" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig"
+            resultMap="productConfigMap">
+        SELECT <include refid="aggregateColumns"/>
+        FROM sku s
+        INNER JOIN sc_sku_activity r
+            ON r.goods_id = s.goods_id
+            AND r.source = s.source
+            AND r.channel = s.channel
+            AND r.status = 1
+        INNER JOIN group_buy_activity a
+            ON a.activity_id = r.activity_id
+            AND a.status = 1
+            AND a.start_time &lt;= NOW()
+            AND a.end_time &gt; NOW()
+        INNER JOIN group_buy_discount d ON d.discount_id = a.discount_id
+        WHERE s.status = 1
+        <if test="keyword != null and keyword != ''">
+            AND (s.goods_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR s.subtitle LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="category != null and category != '' and category != '全部'">
+            AND s.category = #{category}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sort == 'sales'">
+                COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.salesCount')) AS SIGNED), s.sales_count) DESC,
+                s.id DESC
+            </when>
+            <when test="sort == 'price_asc'">
+                CASE d.market_plan
+                    WHEN 'ZJ' THEN COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.originalPrice')) AS DECIMAL(10,2)), s.original_price) - CAST(d.market_expr AS DECIMAL(10,2))
+                    WHEN 'MJ' THEN COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.originalPrice')) AS DECIMAL(10,2)), s.original_price) - CAST(SUBSTRING_INDEX(d.market_expr, ',', -1) AS DECIMAL(10,2))
+                    WHEN 'N' THEN CAST(d.market_expr AS DECIMAL(10,2))
+                    WHEN 'ZK' THEN FLOOR(COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.originalPrice')) AS DECIMAL(10,2)), s.original_price) * CAST(d.market_expr AS DECIMAL(10,4)))
+                    ELSE s.original_price
+                END ASC,
+                s.id DESC
+            </when>
+            <when test="sort == 'price_desc'">
+                CASE d.market_plan
+                    WHEN 'ZJ' THEN COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.originalPrice')) AS DECIMAL(10,2)), s.original_price) - CAST(d.market_expr AS DECIMAL(10,2))
+                    WHEN 'MJ' THEN COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.originalPrice')) AS DECIMAL(10,2)), s.original_price) - CAST(SUBSTRING_INDEX(d.market_expr, ',', -1) AS DECIMAL(10,2))
+                    WHEN 'N' THEN CAST(d.market_expr AS DECIMAL(10,2))
+                    WHEN 'ZK' THEN FLOOR(COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(a.draft_data, '$.originalPrice')) AS DECIMAL(10,2)), s.original_price) * CAST(d.market_expr AS DECIMAL(10,4)))
+                    ELSE s.original_price
+                END DESC,
+                s.id DESC
+            </when>
+            <otherwise>
+                s.sort_order DESC, s.id DESC
+            </otherwise>
+        </choose>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countStoreProductList" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig"
+            resultType="int">
+        SELECT COUNT(1)
+        FROM sku s
+        INNER JOIN sc_sku_activity r
+            ON r.goods_id = s.goods_id
+            AND r.source = s.source
+            AND r.channel = s.channel
+            AND r.status = 1
+        INNER JOIN group_buy_activity a
+            ON a.activity_id = r.activity_id
+            AND a.status = 1
+            AND a.start_time &lt;= NOW()
+            AND a.end_time &gt; NOW()
+        WHERE s.status = 1
+        <if test="keyword != null and keyword != ''">
+            AND (s.goods_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR s.subtitle LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="category != null and category != '' and category != '全部'">
+            AND s.category = #{category}
+        </if>
+    </select>
+
+    <!-- 管理端展示商品最新的一条配置版本，最新版本可以是草稿或已发布活动。 -->
+    <select id="queryAdminProductList" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig"
+            resultMap="productConfigMap">
+        SELECT <include refid="aggregateColumns"/>
+        FROM sku s
+        LEFT JOIN group_buy_activity a
+            ON a.id = (
+                SELECT MAX(a2.id) FROM group_buy_activity a2 WHERE a2.goods_id = s.goods_id
+            )
+        LEFT JOIN group_buy_discount d ON d.discount_id = a.discount_id
+        WHERE 1 = 1
+        <if test="keyword != null and keyword != ''">
+            AND (s.goods_id LIKE CONCAT('%', #{keyword}, '%')
+                 OR s.goods_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null">
+            AND s.status = #{status}
+        </if>
+        ORDER BY s.update_time DESC, s.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countAdminProductList" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig"
+            resultType="int">
+        SELECT COUNT(1) FROM sku s
+        WHERE 1 = 1
+        <if test="keyword != null and keyword != ''">
+            AND (s.goods_id LIKE CONCAT('%', #{keyword}, '%')
+                 OR s.goods_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null">
+            AND s.status = #{status}
+        </if>
+    </select>
+
+    <select id="queryProductConfigByGoodsId" parameterType="java.lang.String"
+            resultMap="productConfigMap">
+        SELECT <include refid="aggregateColumns"/>
+        FROM sku s
+        LEFT JOIN group_buy_activity a
+            ON a.id = (
+                SELECT MAX(a2.id) FROM group_buy_activity a2 WHERE a2.goods_id = s.goods_id
+            )
+        LEFT JOIN group_buy_discount d ON d.discount_id = a.discount_id
+        WHERE s.goods_id = #{goodsId}
+        LIMIT 1
+    </select>
+
+    <select id="queryStoreProductByGoodsId" parameterType="java.lang.String"
+            resultMap="productConfigMap">
+        SELECT <include refid="aggregateColumns"/>
+        FROM sku s
+        INNER JOIN sc_sku_activity r
+            ON r.goods_id = s.goods_id
+            AND r.source = s.source
+            AND r.channel = s.channel
+            AND r.status = 1
+        INNER JOIN group_buy_activity a
+            ON a.activity_id = r.activity_id
+            AND a.status = 1
+            AND a.start_time &lt;= NOW()
+            AND a.end_time &gt; NOW()
+        INNER JOIN group_buy_discount d ON d.discount_id = a.discount_id
+        WHERE s.goods_id = #{goodsId} AND s.status = 1
+        LIMIT 1
+    </select>
+
+    <select id="querySkuByGoodsId" parameterType="java.lang.String" resultMap="productConfigMap">
+        SELECT
+            goods_id, goods_name, original_price, category, subtitle, main_image,
+            CAST(gallery_images AS CHAR) AS gallery_images, sales_count, favorable_rate,
+            CAST(service_tags AS CHAR) AS service_tags, sort_order,
+            status AS product_status, version, source, channel
+        FROM sku
+        WHERE goods_id = #{goodsId}
+    </select>
+
+    <select id="queryDraftByGoodsId" parameterType="java.lang.String" resultMap="productConfigMap">
+        SELECT <include refid="aggregateColumns"/>
+        FROM sku s
+        INNER JOIN group_buy_activity a
+            ON a.goods_id = s.goods_id AND a.status = 0
+        INNER JOIN group_buy_discount d ON d.discount_id = a.discount_id
+        WHERE s.goods_id = #{goodsId}
+        ORDER BY a.id DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryActiveByGoodsId" parameterType="java.lang.String" resultMap="productConfigMap">
+        SELECT <include refid="aggregateColumns"/>
+        FROM sku s
+        INNER JOIN sc_sku_activity r
+            ON r.goods_id = s.goods_id
+            AND r.source = s.source
+            AND r.channel = s.channel
+            AND r.status = 1
+        INNER JOIN group_buy_activity a ON a.activity_id = r.activity_id
+        INNER JOIN group_buy_discount d ON d.discount_id = a.discount_id
+        WHERE s.goods_id = #{goodsId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertSku" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        INSERT INTO sku (
+            source, channel, goods_id, goods_name, original_price,
+            category, subtitle, main_image, gallery_images, sales_count,
+            favorable_rate, service_tags, sort_order, status, version,
+            create_time, update_time
+        ) VALUES (
+            #{source}, #{channel}, #{goodsId}, #{goodsName}, #{originalPrice},
+            #{category}, #{subtitle}, #{mainImage}, #{galleryImages}, #{salesCount},
+            #{favorableRate}, #{serviceTags}, #{sortOrder}, #{productStatus}, 0,
+            NOW(), NOW()
+        )
+    </insert>
+
+    <update id="updateSkuDraft" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        UPDATE sku
+        SET version = version + 1,
+            update_time = NOW()
+        WHERE goods_id = #{goodsId} AND version = #{version}
+    </update>
+
+    <update id="updateSkuPublish" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        UPDATE sku
+        SET source = #{source},
+            channel = #{channel},
+            goods_name = #{goodsName},
+            original_price = #{originalPrice},
+            category = #{category},
+            subtitle = #{subtitle},
+            main_image = #{mainImage},
+            gallery_images = #{galleryImages},
+            sales_count = #{salesCount},
+            favorable_rate = #{favorableRate},
+            service_tags = #{serviceTags},
+            sort_order = #{sortOrder},
+            status = #{productStatus},
+            version = version + 1,
+            update_time = NOW()
+        WHERE goods_id = #{goodsId} AND version = #{version}
+    </update>
+
+    <update id="updateSkuStatus" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        UPDATE sku
+        SET status = #{productStatus}, version = version + 1, update_time = NOW()
+        WHERE goods_id = #{goodsId} AND version = #{version}
+    </update>
+
+    <update id="abandonOldDrafts" parameterType="java.lang.String">
+        UPDATE group_buy_activity
+        SET status = 3, update_time = NOW()
+        WHERE goods_id = #{goodsId} AND status = 0
+    </update>
+
+    <insert id="insertDiscount" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        INSERT INTO group_buy_discount (
+            discount_id, discount_name, discount_desc, discount_type,
+            market_plan, market_expr, tag_id, create_time, update_time
+        ) VALUES (
+            #{discountId}, #{discountName}, #{discountDesc}, #{discountType},
+            #{marketPlan}, #{marketExpr}, #{tagId}, NOW(), NOW()
+        )
+    </insert>
+
+    <insert id="insertActivity" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        INSERT INTO group_buy_activity (
+            activity_id, activity_name, discount_id, group_type,
+            take_limit_count, target, valid_time, status,
+            start_time, end_time, tag_id, tag_scope,
+            goods_id, source, channel, config_version, draft_data, create_time, update_time
+        ) VALUES (
+            #{activityId}, #{activityName}, #{discountId}, #{groupType},
+            #{takeLimitCount}, #{target}, #{validTime}, #{activityStatus},
+            #{startTime}, #{endTime}, #{tagId}, NULL,
+            #{goodsId}, #{source}, #{channel}, #{version}, #{draftData}, NOW(), NOW()
+        )
+    </insert>
+
+    <update id="updateActivityStatus" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        UPDATE group_buy_activity
+        SET status = #{activityStatus}, update_time = NOW()
+        WHERE activity_id = #{activityId}
+    </update>
+
+    <insert id="upsertRoute" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        INSERT INTO sc_sku_activity (
+            source, channel, activity_id, goods_id, status, create_time, update_time
+        ) VALUES (
+            #{source}, #{channel}, #{activityId}, #{goodsId}, 1, NOW(), NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            activity_id = VALUES(activity_id),
+            status = 1,
+            update_time = NOW()
+    </insert>
+
+    <update id="updateRouteStatus" parameterType="com.hjs.study.infrastructure.dao.po.ProductConfig">
+        UPDATE sc_sku_activity
+        SET status = #{status}, update_time = NOW()
+        WHERE goods_id = #{goodsId} AND source = #{source} AND channel = #{channel}
+    </update>
+
+</mapper>

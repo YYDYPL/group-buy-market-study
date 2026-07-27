@@ -93,8 +93,8 @@
 
     <!-- 查询指定队伍的完整主单信息，常用于交易域构建 GroupBuyTeamEntity。 -->
     <select id="queryGroupBuyTeamByTeamId" parameterType="java.lang.String" resultMap="dataMap">
-        select team_id, activity_id, target_count, complete_count, lock_count, status, valid_start_time, valid_end_time,
-        notify_type, notify_url
+        select team_id, activity_id, source, channel, original_price, deduction_price, pay_price,
+        target_count, complete_count, lock_count, status, valid_start_time, valid_end_time, notify_type, notify_url
         from group_buy_order where team_id = #{teamId}
     </select>
 
@@ -153,6 +153,19 @@
         <foreach item="teamId" collection="teamIds" open="(" separator="," close=")">
             #{teamId}
         </foreach>
+    </select>
+
+    <select id="queryAllTeamCountByActivityId"
+            parameterType="java.lang.Long"
+            resultType="java.lang.Integer">
+        select count(id) from group_buy_order where activity_id = #{activityId}
+    </select>
+
+    <select id="queryAllTeamCompleteCountByActivityId"
+            parameterType="java.lang.Long"
+            resultType="java.lang.Integer">
+        select count(id) from group_buy_order
+        where activity_id = #{activityId} and status in (1, 3)
     </select>
 
     <!--

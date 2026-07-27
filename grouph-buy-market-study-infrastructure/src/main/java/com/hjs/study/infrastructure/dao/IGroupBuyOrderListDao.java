@@ -1,6 +1,7 @@
 package com.hjs.study.infrastructure.dao;
 
 import com.hjs.study.infrastructure.dao.po.GroupBuyOrderList;
+import com.hjs.study.infrastructure.dao.po.StoreOrder;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -122,5 +123,13 @@ public interface IGroupBuyOrderListDao {
      * @return 超时未支付订单列表
      */
     List<GroupBuyOrderList> queryTimeoutUnpaidOrderList();
+
+    List<StoreOrder> queryStoreOrders(StoreOrder query);
+
+    Integer countStoreOrders(StoreOrder query);
+
+    List<StoreOrder> queryStoreTeamMembers(String teamId);
+
+    Integer queryAllUserCountByActivityId(Long activityId);
 
 }

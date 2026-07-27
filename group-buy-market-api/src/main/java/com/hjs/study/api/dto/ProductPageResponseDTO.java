@@ -1,0 +1,23 @@
+package com.hjs.study.api.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+/**
+ * 商品配置分页响应。
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductPageResponseDTO {
+
+    private List<ProductConfigResponseDTO> items;
+    private Integer total;
+    private Integer page;
+    private Integer pageSize;
+}

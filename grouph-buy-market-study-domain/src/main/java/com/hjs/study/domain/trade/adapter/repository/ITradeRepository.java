@@ -8,6 +8,8 @@ import com.hjs.study.domain.trade.model.entity.GroupBuyActivityEntity;
 import com.hjs.study.domain.trade.model.entity.GroupBuyTeamEntity;
 import com.hjs.study.domain.trade.model.entity.MarketPayOrderEntity;
 import com.hjs.study.domain.trade.model.entity.NotifyTaskEntity;
+import com.hjs.study.domain.trade.model.entity.StoreOrderEntity;
+import com.hjs.study.domain.trade.model.entity.StoreTeamEntity;
 import com.hjs.study.domain.trade.model.valobj.GroupBuyProgressVO;
 
 import java.util.List;
@@ -231,5 +233,21 @@ public interface ITradeRepository {
      * @return 超时未支付订单明细列表
      */
     List<UserGroupBuyOrderDetailEntity> queryTimeoutUnpaidOrderList();
+
+    /**
+     * 分页查询用户在商城中的历史订单。
+     */
+    List<StoreOrderEntity> queryStoreOrders(
+            String userId, String goodsId, Integer status, Integer offset, Integer pageSize);
+
+    /**
+     * 统计符合商城筛选条件的用户订单数。
+     */
+    Integer countStoreOrders(String userId, String goodsId, Integer status);
+
+    /**
+     * 查询一支团队及其全部成员订单。
+     */
+    StoreTeamEntity queryStoreTeam(String teamId);
 
 }

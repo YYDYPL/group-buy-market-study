@@ -2,27 +2,52 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商城登录</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#e02e24">
+    <title>模拟用户中心 - HJS 拼团</title>
+    <link rel="icon" href="images/placeholder-product.svg" type="image/svg+xml">
     <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
-<div class="container">
-    <form id="loginForm" class="login-form">
-        <h2>欢迎登录 - 小傅哥拼团</h2>
-        <div class="input-group">
-            <input type="text" id="username" required>
-            <label for="username">用户名</label>
+<header class="identity-header">
+    <a href="index.html" aria-label="返回商城">‹</a>
+    <div><strong>HJS 拼团</strong><span>模拟用户中心</span></div>
+    <a href="orders.html" aria-label="我的订单">单</a>
+</header>
+
+<main class="identity-page">
+    <section class="register-panel">
+        <span class="section-kicker">NEW USER</span>
+        <h1>注册模拟用户</h1>
+        <form id="identityForm">
+            <label>
+                <span>用户 ID</span>
+                <input id="userId" name="userId" maxlength="24" autocomplete="off" placeholder="例如 hjs_user_a" required>
+            </label>
+            <label>
+                <span>昵称</span>
+                <input id="nickname" name="nickname" maxlength="16" autocomplete="off" placeholder="例如 小明" required>
+            </label>
+            <button type="submit">注册并使用</button>
+            <p id="formError" class="form-error" role="alert"></p>
+        </form>
+    </section>
+
+    <section class="user-panel">
+        <div class="section-title">
+            <div><span class="section-kicker">LOCAL USERS</span><h2>已注册用户</h2></div>
+            <span id="userCount">0 个</span>
         </div>
-        <div class="input-group">
-            <input type="password" id="password" required>
-            <label for="password">密码</label>
+        <div id="userList" class="user-list"></div>
+        <div id="emptyUsers" class="empty-users">
+            <b>暂无用户</b>
+            <span>先注册一个身份开始拼团</span>
         </div>
-        <button type="submit">登录</button>
-        <p class="error-message" id="errorMessage"></p>
-    </form>
-</div>
+    </section>
+</main>
+
+<div id="toast" class="toast" role="status"></div>
+<script src="js/store-identity.js"></script>
 <script src="js/login.js"></script>
 </body>
 </html>
-

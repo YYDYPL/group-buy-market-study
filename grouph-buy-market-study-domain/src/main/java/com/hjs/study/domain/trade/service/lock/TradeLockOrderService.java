@@ -51,6 +51,11 @@ public class TradeLockOrderService implements ITradeLockOrderService {
     }
 
     @Override
+    public GroupBuyTeamEntity queryGroupBuyTeamByTeamId(String teamId) {
+        return repository.queryGroupBuyTeamByTeamId(teamId);
+    }
+
+    @Override
     public MarketPayOrderEntity lockMarketPayOrder(UserEntity userEntity, PayActivityEntity payActivityEntity, PayDiscountEntity payDiscountEntity) throws Exception {
         log.info("拼团交易-锁定营销优惠支付订单:{} activityId:{} goodsId:{}", userEntity.getUserId(), payActivityEntity.getActivityId(), payDiscountEntity.getGoodsId());
 

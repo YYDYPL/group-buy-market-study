@@ -6,3 +6,12 @@ spring:
   profiles:
     # 本地启动默认加载 application-dev.yml；部署时可通过启动参数覆盖为 prod 或 test。
     active: dev
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+gbm:
+  admin:
+    token: ${GBM_ADMIN_TOKEN:}
+    upload-dir: ${GBM_UPLOAD_DIR:./uploads}

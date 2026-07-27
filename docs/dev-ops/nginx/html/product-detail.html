@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <title>商品拼团详情</title>
+    <link rel="icon" href="images/placeholder-product.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="css/product-detail.css">
+</head>
+<body>
+<header class="detail-header">
+    <button type="button" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="返回">‹</button>
+    <strong>拼团详情</strong>
+    <a id="identitySwitch" href="login.html" aria-label="切换用户">人</a>
+</header>
+
+<main id="detailPage" class="detail-page">
+    <section class="gallery">
+        <div id="galleryTrack" class="gallery-track">
+            <div class="gallery-skeleton"></div>
+        </div>
+        <div id="galleryDots" class="gallery-dots"></div>
+        <span id="galleryCounter" class="gallery-counter">1/1</span>
+    </section>
+
+    <section class="price-panel">
+        <div>
+            <span class="group-label">拼团价</span>
+            <small>¥</small><strong id="payPrice">--</strong>
+            <del id="originalPrice">¥--</del>
+        </div>
+        <div class="sales-copy">已拼<span id="salesCount">--</span>件</div>
+    </section>
+
+    <section class="product-copy card">
+        <h1 id="goodsName">正在加载商品信息...</h1>
+        <p id="subtitle">好货正在赶来的路上</p>
+        <div id="serviceTags" class="service-tags"></div>
+    </section>
+
+    <section class="identity-strip card">
+        <div class="identity-avatar" id="identityAvatar">访</div>
+        <div><span>当前模拟用户</span><strong id="identityName">游客预览</strong></div>
+        <a id="identityAction" href="login.html">切换用户</a>
+    </section>
+
+    <section class="promotion card">
+        <div class="card-title">
+            <h2>拼团优惠</h2>
+            <span id="activityName">活动加载中</span>
+        </div>
+        <div class="promotion-row">
+            <span class="promo-icon">省</span>
+            <div>
+                <strong id="priceExplanation">正在计算优惠</strong>
+                <p id="activityRule">达到目标人数即可成团</p>
+            </div>
+            <em id="activityCountdown">长期有效</em>
+        </div>
+    </section>
+
+    <section id="currentOrderSection" class="current-order card" hidden>
+        <div class="card-title">
+            <h2>我的当前订单</h2>
+            <a href="orders.html">全部订单</a>
+        </div>
+        <div id="currentOrderCard"></div>
+    </section>
+
+    <section id="inviteTeamSection" class="invite-team card" hidden>
+        <div class="card-title"><h2>好友邀请团</h2><span id="inviteTeamStatus">加载中</span></div>
+        <div id="inviteTeamCard"></div>
+    </section>
+
+    <section class="group-section card">
+        <div class="card-title">
+            <h2>这些人正在拼</h2>
+            <span>实时可加入队伍</span>
+        </div>
+        <div id="teamStatistic" class="team-statistic">
+            <div><strong>--</strong><span>累计开团</span></div>
+            <div><strong>--</strong><span>历史成团</span></div>
+            <div><strong>--</strong><span>累计参团</span></div>
+        </div>
+        <div id="groupList" class="group-list">
+            <div class="group-skeleton"></div>
+            <div class="group-skeleton"></div>
+        </div>
+    </section>
+
+    <section class="assurance card">
+        <div class="card-title"><h2>服务保障</h2><span>放心拼 · 售后无忧</span></div>
+        <div class="assurance-grid">
+            <div><b>正</b><span>正品保障<small>品质严格把关</small></span></div>
+            <div><b>退</b><span>极速退款<small>售后快速响应</small></span></div>
+            <div><b>邮</b><span>全场包邮<small>送货到家</small></span></div>
+        </div>
+    </section>
+
+    <section class="detail-copy card">
+        <h2>商品详情</h2>
+        <div class="detail-banner">
+            <span>今日拼团推荐</span>
+            <strong id="detailTitle">精选好货 · 实惠到家</strong>
+            <p>商品展示信息由运营后台统一配置，成交价格以服务端实时试算为准。</p>
+        </div>
+    </section>
+</main>
+
+<div class="bottom-actions">
+    <a class="mini-action" href="orders.html"><span>单</span>订单</a>
+    <button id="buyAlone" class="buy-alone" type="button"><span>¥--</span>单独购买</button>
+    <button id="startGroup" class="start-group" type="button" disabled><span>¥--</span>发起拼团</button>
+</div>
+
+<div id="lockResultModal" class="modal" aria-hidden="true">
+    <div class="modal-card lock-result-card">
+        <button class="modal-close" type="button" data-close-lock>×</button>
+        <span class="modal-kicker">LOCKED</span>
+        <h2>锁单成功，等待支付</h2>
+        <div class="lock-state-icon">锁</div>
+        <dl class="lock-summary">
+            <div><dt>内部订单</dt><dd id="lockedOrderId">--</dd></div>
+            <div><dt>交易单号</dt><dd id="lockedTradeNo">--</dd></div>
+            <div><dt>拼团队伍</dt><dd id="lockedTeamId">--</dd></div>
+            <div><dt>待支付</dt><dd id="lockedAmount">¥0.00</dd></div>
+        </dl>
+        <div class="lock-result-actions">
+            <button type="button" data-close-lock>稍后支付</button>
+            <button id="inviteAfterLock" type="button">邀请好友</button>
+            <button id="payAfterLock" type="button">立即支付</button>
+        </div>
+    </div>
+</div>
+
+<div id="paymentModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+        <button id="closeModal" class="modal-close" type="button">×</button>
+        <span class="modal-kicker">模拟收银台</span>
+        <h2>确认支付</h2>
+        <strong id="paymentAmount">¥0.00</strong>
+        <div class="qr-mock"><span>拼</span><small>扫码支付演示</small></div>
+        <p>交易单号：<code id="outTradeNo">--</code></p>
+        <div class="modal-actions">
+            <button id="cancelPayment" type="button">暂不支付</button>
+            <button id="completePayment" type="button">我已完成支付</button>
+        </div>
+    </div>
+</div>
+
+<div id="teamModal" class="modal" aria-hidden="true">
+    <div class="modal-card team-modal-card">
+        <button id="closeTeamModal" class="modal-close" type="button">×</button>
+        <span class="modal-kicker">TEAM DETAIL</span>
+        <h2>拼团队伍详情</h2>
+        <div id="teamModalBody"></div>
+    </div>
+</div>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script src="js/store-identity.js"></script>
+<script src="js/store-api.js"></script>
+<script src="js/product-detail.js"></script>
+</body>
+</html>

@@ -125,6 +125,10 @@ public interface IGroupBuyOrderDao {
      */
     Integer queryAllUserCount(@Param("teamIds") Set<String> teamIds);
 
+    Integer queryAllTeamCountByActivityId(Long activityId);
+
+    Integer queryAllTeamCompleteCountByActivityId(Long activityId);
+
     /**
      * 处理“未支付即退单”场景下的队伍主单回滚。
      *

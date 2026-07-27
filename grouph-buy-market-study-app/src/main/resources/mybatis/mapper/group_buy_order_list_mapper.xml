@@ -29,6 +29,31 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <resultMap id="storeOrderMap" type="com.hjs.study.infrastructure.dao.po.StoreOrder">
+        <result column="user_id" property="userId"/>
+        <result column="order_id" property="orderId"/>
+        <result column="out_trade_no" property="outTradeNo"/>
+        <result column="goods_id" property="goodsId"/>
+        <result column="goods_name" property="goodsName"/>
+        <result column="main_image" property="mainImage"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="team_id" property="teamId"/>
+        <result column="source" property="source"/>
+        <result column="channel" property="channel"/>
+        <result column="original_price" property="originalPrice"/>
+        <result column="deduction_price" property="deductionPrice"/>
+        <result column="pay_price" property="payPrice"/>
+        <result column="order_status" property="orderStatus"/>
+        <result column="out_trade_time" property="outTradeTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="team_status" property="teamStatus"/>
+        <result column="target_count" property="targetCount"/>
+        <result column="complete_count" property="completeCount"/>
+        <result column="lock_count" property="lockCount"/>
+        <result column="valid_end_time" property="validEndTime"/>
+    </resultMap>
+
     <!--
         新增一条用户参团明细。
         锁单成功后会写入这里，作为营销侧的用户订单记录。
@@ -182,6 +207,55 @@
           and out_trade_time is null 
           and now() > end_time
         limit 10
+    </select>
+
+    <sql id="storeOrderFilter">
+        where o.user_id = #{userId}
+        <if test="goodsId != null and goodsId != ''">
+            and o.goods_id = #{goodsId}
+        </if>
+        <if test="status != null">
+            and o.status = #{status}
+        </if>
+    </sql>
+
+    <select id="queryStoreOrders"
+            parameterType="com.hjs.study.infrastructure.dao.po.StoreOrder"
+            resultMap="storeOrderMap">
+        select o.user_id, o.order_id, o.out_trade_no, o.goods_id,
+               s.goods_name, s.main_image, o.activity_id, o.team_id,
+               o.source, o.channel, o.original_price, o.deduction_price, o.pay_price,
+               o.status as order_status, o.out_trade_time, o.create_time, o.update_time,
+               t.status as team_status, t.target_count, t.complete_count, t.lock_count, t.valid_end_time
+        from group_buy_order_list o
+        left join group_buy_order t on t.team_id = o.team_id
+        left join sku s on s.goods_id = o.goods_id
+        <include refid="storeOrderFilter"/>
+        order by o.id desc
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="countStoreOrders"
+            parameterType="com.hjs.study.infrastructure.dao.po.StoreOrder"
+            resultType="java.lang.Integer">
+        select count(o.id)
+        from group_buy_order_list o
+        <include refid="storeOrderFilter"/>
+    </select>
+
+    <select id="queryStoreTeamMembers" parameterType="java.lang.String" resultMap="storeOrderMap">
+        select user_id, order_id, out_trade_no, goods_id, activity_id, team_id,
+               source, channel, original_price, deduction_price, pay_price,
+               status as order_status, out_trade_time, create_time, update_time
+        from group_buy_order_list
+        where team_id = #{teamId}
+        order by id asc
+    </select>
+
+    <select id="queryAllUserCountByActivityId"
+            parameterType="java.lang.Long"
+            resultType="java.lang.Integer">
+        select count(id) from group_buy_order_list where activity_id = #{activityId}
     </select>
 
 </mapper>

@@ -4,6 +4,7 @@ import com.hjs.study.domain.trade.model.entity.MarketPayOrderEntity;
 import com.hjs.study.domain.trade.model.entity.PayActivityEntity;
 import com.hjs.study.domain.trade.model.entity.PayDiscountEntity;
 import com.hjs.study.domain.trade.model.entity.UserEntity;
+import com.hjs.study.domain.trade.model.entity.GroupBuyTeamEntity;
 import com.hjs.study.domain.trade.model.valobj.GroupBuyProgressVO;
 
 /**
@@ -43,6 +44,11 @@ public interface ITradeLockOrderService {
      * @return 拼团进度值对象
      */
     GroupBuyProgressVO queryGroupBuyProgress(String teamId);
+
+    /**
+     * 查询指定团队的完整状态，供参团前校验使用。
+     */
+    GroupBuyTeamEntity queryGroupBuyTeamByTeamId(String teamId);
 
     /**
      * 锁定营销预购订单。

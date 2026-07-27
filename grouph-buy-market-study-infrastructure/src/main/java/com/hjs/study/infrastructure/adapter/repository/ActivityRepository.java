@@ -322,29 +322,15 @@ public class ActivityRepository extends AbstractRepository implements IActivityR
      */
     @Override
     public TeamStatisticVO queryTeamStatisticByActivityId(Long activityId) {
-        // 1. 根据活动ID查询拼团队伍
-        List<GroupBuyOrderList> groupBuyOrderLists = groupBuyOrderListDao.queryInProgressUserGroupBuyOrderDetailListByActivityId(activityId);
+        // 历史累计数据直接按活动聚合，退款或失败不会让已经发生过的开团、参团事实消失。
+        Integer allTeamCount = groupBuyOrderDao.queryAllTeamCountByActivityId(activityId);
+        Integer allTeamCompleteCount = groupBuyOrderDao.queryAllTeamCompleteCountByActivityId(activityId);
+        Integer allTeamUserCount = groupBuyOrderListDao.queryAllUserCountByActivityId(activityId);
 
-        if (null == groupBuyOrderLists || groupBuyOrderLists.isEmpty()) {
-            return new TeamStatisticVO(0, 0, 0);
-        }
-
-        // 2. 过滤队伍获取 TeamId
-        Set<String> teamIds = groupBuyOrderLists.stream()
-                .map(GroupBuyOrderList::getTeamId)
-                .filter(teamId -> teamId != null && !teamId.isEmpty()) // 过滤非空和非空字符串
-                .collect(Collectors.toSet());
-
-        // 3. 统计数据
-        Integer allTeamCount = groupBuyOrderDao.queryAllTeamCount(teamIds);
-        Integer allTeamCompleteCount = groupBuyOrderDao.queryAllTeamCompleteCount(teamIds);
-        Integer allTeamUserCount = groupBuyOrderDao.queryAllUserCount(teamIds);
-
-        // 4. 返回汇总后的统计结果，供活动页展示“多少团、成团多少、多少人参与”等数据。
         return TeamStatisticVO.builder()
-                .allTeamCount(allTeamCount)
-                .allTeamCompleteCount(allTeamCompleteCount)
-                .allTeamUserCount(allTeamUserCount)
+                .allTeamCount(null == allTeamCount ? 0 : allTeamCount)
+                .allTeamCompleteCount(null == allTeamCompleteCount ? 0 : allTeamCompleteCount)
+                .allTeamUserCount(null == allTeamUserCount ? 0 : allTeamUserCount)
                 .build();
     }
 
