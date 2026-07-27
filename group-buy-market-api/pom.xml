@@ -20,7 +20,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.26</version>
+            <!-- 不显式声明版本，继承根 pom 的 lombok.version=1.18.34，避免与 JDK 21 不兼容。 -->
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>

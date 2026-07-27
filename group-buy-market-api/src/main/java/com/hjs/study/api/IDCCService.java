@@ -6,7 +6,7 @@ import com.hjs.study.api.response.Response;
  * DCC（Dynamic Configuration Center）动态配置服务契约。
  *
  * <p>用于在应用运行期间发布配置项变更，例如降级开关、切量范围和限流开关。接口只描述
- * 配置变更协议，具体发布与订阅机制由 Trigger 及动态配置组件实现。</p>
+ * 配置变更协议，具体发布与订阅机制由 Trigger 及动态配置组件实现（当前由 Nacos 承载）。</p>
  *
  * @author Fuzhengwei bugstack.cn @小傅哥
  * @create 2025-01-03 19:16

@@ -1,0 +1,68 @@
+name: dev-ops
+
+# Nacos 动态配置中心本地部署。
+# 仅用于本地开发与联调，使用 standalone 模式与内嵌 derby 存储，无需额外依赖 MySQL。
+#
+# 启动：
+#   cd docs/dev-ops/nacos
+#   docker compose up -d
+# 访问控制台：
+#   http://127.0.0.1:8848/nacos
+#   默认账号/密码：nacos / nacos
+#
+# 端口说明：
+#   8848：Nacos HTTP 控制台与 Open API
+#   9848：客户端 gRPC 通信端口（Nacos 2.x 客户端必须）
+#   9849：服务端之间 gRPC 通信端口（单机模式仍需保留）
+services:
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: nacos
+    restart: unless-stopped
+    environment:
+      # 单机模式，跳过集群选主流程。
+      MODE: standalone
+      # 优先使用主机名作为服务注册标识，避免容器内 IP 变化导致实例漂移。
+      PREFER_HOST_MODE: hostname
+      # 不使用外部数据源，采用 Nacos 内嵌 derby。
+      SPRING_DATASOURCE_PLATFORM: ""
+      # 开启鉴权，避免控制台与 Open API 被无密码访问。
+      NACOS_AUTH_ENABLE: "true"
+      # 鉴权 token，原生于 Nacos 2.2+；至少 32 字节，生产环境应替换为高强度密钥。
+      NACOS_AUTH_TOKEN: "SecretKey012345678901234567890123456789012345678901234567890123456789"
+      # 服务端 Raft 通信的 identity 校验键值对。
+      NACOS_AUTH_IDENTITY_KEY: "nacos"
+      NACOS_AUTH_IDENTITY_VALUE: "nacos"
+      JVM_XMS: "512m"
+      JVM_XMX: "512m"
+      JVM_XMN: "256m"
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:8848:8848"
+      - "127.0.0.1:9848:9848"
+      - "127.0.0.1:9849:9849"
+    volumes:
+      - dev-ops-nacos-data:/home/nacos/data
+      - dev-ops-nacos-logs:/home/nacos/logs
+    healthcheck:
+      # 通过控制台登录页判断 Nacos 是否就绪，避免在初始化阶段被误判为健康。
+      test: ["CMD", "curl", "-fs", "http://127.0.0.1:8848/nacos/v1/console/health/readiness"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks:
+      - my-network
+
+volumes:
+  dev-ops-nacos-data:
+    name: dev-ops-nacos-data
+  dev-ops-nacos-logs:
+    name: dev-ops-nacos-logs
+
+networks:
+  my-network:
+    # 复用 docs/dev-ops/docker-compose-environment.yml 创建的同名网络；
+    # 若尚未启动主环境，docker compose 会自动按当前声明创建。
+    name: dev-ops_my-network
+    driver: bridge

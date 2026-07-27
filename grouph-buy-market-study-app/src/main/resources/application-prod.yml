@@ -93,14 +93,8 @@ redis:
       ping-interval: 60000
       keep-alive: true
 
-# xfg-wrench 通用组件配置：system 用于区分应用，register 指向动态配置注册中心使用的 Redis。
-xfg:
-  wrench:
-    config:
-      system: group-buy-market
-      register:
-        host: 192.168.1.108
-        port: 16379
+# 动态配置中心已迁移到 Nacos，详见 bootstrap.yml 与 docs/dev-ops/nacos/docker-compose.yml。
+# 原来的 xfg.wrench.config 配置块不再需要，相关 Redis 仍由上方 redis.sdk.config 提供。
 
 # Logstash 服务地址，由 logback-spring.xml 的 TCP appender 读取。
 logstash:

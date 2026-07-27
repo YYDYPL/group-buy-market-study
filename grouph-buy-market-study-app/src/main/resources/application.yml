@@ -1,11 +1,6 @@
-# 应用公共入口配置：只声明配置名称和默认环境，具体资源连接参数由 profile 文件提供。
+# 应用公共入口配置：应用名与默认环境已迁移到 bootstrap.yml（Nacos 配置中心需要在引导阶段确定）。
+# 此处仅保留与业务相关的全局默认值，具体资源连接参数由 profile 文件提供。
 spring:
-  config:
-    # 用于标识当前 Spring 应用的配置名称。
-    name: group-buy-market-app
-  profiles:
-    # 本地启动默认加载 application-dev.yml；部署时可通过启动参数覆盖为 prod 或 test。
-    active: dev
   servlet:
     multipart:
       max-file-size: 5MB

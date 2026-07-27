@@ -36,6 +36,9 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Spring Boot 2.7.12 默认的 lombok 1.18.26 与 JDK 21 不兼容，会抛 JCTree$JCImport.qualid 找不到字段。
+             升级到 1.18.34 以同时兼容 JDK 8/17/21，避免 mvn clean compile 失败。 -->
+        <lombok.version>1.18.34</lombok.version>
     </properties>
 
 
@@ -112,6 +115,23 @@
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson-spring-boot-starter</artifactId>
                 <version>3.26.0</version>
+            </dependency>
+
+            <!-- Spring Cloud BOM；与 Spring Boot 2.7.x 配套使用 2021.0.x 系列 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2021.0.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Spring Cloud Alibaba BOM；2021.0.5.0 对应 Nacos 客户端 2.0.4，兼容 Nacos Server 2.2.x -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>2021.0.5.0</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!-- 工程模块 -->

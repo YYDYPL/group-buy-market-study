@@ -1,7 +1,9 @@
 package com.hjs.study.infrastructure.dcc;
 
-import cn.bugstack.wrench.dynamic.config.center.types.annotations.DCCValue;
 import com.hjs.study.types.common.Constants;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -10,22 +12,33 @@ import java.util.List;
 /**
  * 动态配置中心服务。
  * <p>
- * 该类负责承接 DCC（Dynamic Config Center，动态配置中心）下发的运行时配置，
- * 并把字符串形式的配置项转换为业务代码更容易使用的布尔判断或范围判断。
- * 当前主要承载四类能力：
- * 1. 系统整体降级开关；
- * 2. 灰度切量范围控制；
- * 3. 渠道黑名单拦截；
- * 4. 仓储缓存开关。
+ * 该类负责承接 Nacos 下发的运行时配置，并把字符串形式的配置项转换为业务代码更容易使用的布尔判断
+ * 或范围判断。当前主要承载四类能力：
+ * <ol>
+ *   <li>系统整体降级开关；</li>
+ *   <li>灰度切量范围控制；</li>
+ *   <li>渠道黑名单拦截；</li>
+ *   <li>仓储缓存开关。</li>
+ * </ol>
  * <p>
- * 使用 {@link DCCValue} 注解后，字段值会在应用运行期间被动态刷新，
- * 因此无需重启应用就能调整开关策略。
+ * 使用 {@link RefreshScope} 后，{@link Value} 字段会在 Nacos 配置变更并被推送到客户端时，
+ * 通过 Spring Cloud Context 的 ContextRefresher 触发 Bean 重建来应用最新值，因此无需重启
+ * 应用即可调整开关策略。
+ * <p>
+ * 与历史实现（xfg-wrench 动态配置中心 + Redis Topic 广播）的差异：
+ * <ul>
+ *   <li>配置来源从 Redis 切换为 Nacos 配置中心；</li>
+ *   <li>配置 key 统一收敛到 {@code dcc.*} 命名空间，避免与 Spring 内置属性冲突；</li>
+ *   <li>默认值与历史保持一致，保证业务行为不变。</li>
+ * </ul>
  *
  * @author Fuzhengwei bugstack.cn @小傅哥
  * @description 动态配置服务
  * @create 2025-01-03 15:38
  */
+@Slf4j
 @Service
+@RefreshScope
 public class DCCService {
 
     /**
@@ -35,7 +48,7 @@ public class DCCService {
      * 0 表示关闭降级，系统按正常完整链路执行；
      * 1 表示开启降级，上层业务可根据该值跳过部分非核心流程或直接快速失败。
      */
-    @DCCValue("downgradeSwitch:0")
+    @Value("${dcc.downgradeSwitch:0}")
     private String downgradeSwitch;
 
     /**
@@ -45,7 +58,7 @@ public class DCCService {
      * 如果配置为 30，则只有哈希后尾号落在 0~30 范围内的用户命中。
      * 该能力通常用于新功能灰度、限流试放量等场景。
      */
-    @DCCValue("cutRange:100")
+    @Value("${dcc.cutRange:100}")
     private String cutRange;
 
     /**
@@ -55,7 +68,7 @@ public class DCCService {
      * 多个黑名单项之间使用 {@link Constants#SPLIT} 分隔。
      * 命中后表示该来源渠道被拦截，不允许继续参与相关业务流程。
      */
-    @DCCValue("scBlacklist:s02c02")
+    @Value("${dcc.scBlacklist:s02c02}")
     private String scBlacklist;
 
     /**
@@ -66,7 +79,7 @@ public class DCCService {
      * 1 表示关闭缓存，直接走数据库。
      * 这个命名虽然叫 openSwitch，但本质上更像“缓存是否允许使用”的配置。
      */
-    @DCCValue("cacheSwitch:0")
+    @Value("${dcc.cacheSwitch:0}")
     private String cacheOpenSwitch;
 
     /**

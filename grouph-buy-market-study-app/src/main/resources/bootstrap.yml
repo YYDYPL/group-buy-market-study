@@ -1,0 +1,26 @@
+# Spring Cloud 引导阶段配置；Nacos 配置中心必须在 bootstrap 阶段建立连接，
+# 否则 application.yml 中的占位符无法从远程配置解析。
+# 该文件会先于 application.yml 加载，覆盖顺序为：远程 Nacos 配置 > 本地 application*.yml。
+spring:
+  application:
+    # 同时作为 Nacos dataId 的前缀（${spring.application.name}-${profile}.${file-extension}）。
+    name: group-buy-market-app
+  profiles:
+    # 默认 dev；可通过启动参数 -Dspring.profiles.active=prod 覆盖。
+    active: @profileActive@
+  cloud:
+    nacos:
+      config:
+        # Nacos Server 地址；本地部署固定 127.0.0.1:8848。
+        server-addr: ${NACOS_HOST:127.0.0.1}:${NACOS_PORT:8848}
+        # 远程配置文件后缀；这里使用 yaml，与本地 application*.yml 风格保持一致。
+        file-extension: yaml
+        # 命名空间；默认 public，可按环境拆分为 dev/test/prod 命名空间。
+        namespace: ${NACOS_NAMESPACE:public}
+        # 配置分组；DEFAULT_GROUP 是 Nacos 默认分组。
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        # Nacos 2.2+ 默认开启鉴权，必须提供账号密码才能拉取配置。
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        # 开启配置监听；远程配置变更后通过 @RefreshScope 自动刷新。
+        refresh-enabled: true

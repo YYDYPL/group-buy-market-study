@@ -45,3 +45,6 @@ build/
 *.log
 data/log/
 docs/dev-ops/uploads/
+
+### WorkBuddy ###
+.workbuddy/

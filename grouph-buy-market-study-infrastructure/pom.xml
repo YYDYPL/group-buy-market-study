@@ -34,11 +34,12 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
+        <!-- Spring Cloud Alibaba Nacos 配置中心客户端；替代原 xfg-wrench 动态配置中心 -->
         <dependency>
-            <groupId>cn.bugstack.wrench</groupId>
-            <artifactId>xfg-wrench-starter-dynamic-config-center</artifactId>
-            <version>3.0.0</version>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
+
         <!-- 系统模块 -->
         <dependency>
             <groupId>com.hjs.study</groupId>
