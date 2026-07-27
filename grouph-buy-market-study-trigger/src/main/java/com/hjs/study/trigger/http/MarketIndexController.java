@@ -87,8 +87,8 @@ public class MarketIndexController implements IMarketIndexService {
             GroupBuyActivityDiscountVO groupBuyActivityDiscountVO = trialBalanceEntity.getGroupBuyActivityDiscountVO();
             Long activityId = groupBuyActivityDiscountVO.getActivityId();
 
-            // 2. 查询用户可参与的进行中队伍；第 1 页、每页 2 条用于首页精简展示。
-            List<UserGroupBuyOrderDetailEntity> userGroupBuyOrderDetailEntities = indexGroupBuyMarketService.queryInProgressUserGroupBuyOrderDetailList(activityId, requestDTO.getUserId(), 1, 2);
+            // 2. 查询用户可参与的进行中队伍；保留当前用户队伍，并提供 6 条随机候选供详情页轮播。
+            List<UserGroupBuyOrderDetailEntity> userGroupBuyOrderDetailEntities = indexGroupBuyMarketService.queryInProgressUserGroupBuyOrderDetailList(activityId, requestDTO.getUserId(), 1, 6);
 
             // 3. 查询活动全局统计，与上一步的具体队伍列表属于不同展示维度。
             TeamStatisticVO teamStatisticVO = indexGroupBuyMarketService.queryTeamStatisticByActivityId(activityId);

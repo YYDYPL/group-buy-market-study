@@ -17,6 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let invitedTeam;
     let paymentOrder;
     let lockedOrder;
+    let groupCarouselTimer;
+    let countdownTimer;
+    let groupCarouselIndex = 0;
 
     renderIdentity();
 
@@ -144,6 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderMarket(data) {
+        stopMarketTimers();
         const stats = data.teamStatistic || {};
         document.getElementById("teamStatistic").innerHTML = `
             <div><strong>${Number(stats.allTeamCount || 0)}</strong><span>累计开团</span></div>
@@ -151,26 +155,86 @@ document.addEventListener("DOMContentLoaded", () => {
             <div><strong>${Number(stats.allTeamUserCount || 0)}</strong><span>累计参团</span></div>`;
         document.getElementById("payPrice").textContent = StoreApi.money(data.goods.payPrice);
         startGroup.querySelector("span").textContent = `¥${StoreApi.money(data.goods.payPrice)}`;
-        if (!data.teamList || !data.teamList.length) {
+        const teams = randomizeTeams(uniqueTeams(data.teamList || []));
+        if (!teams.length) {
+            groupList.classList.add("is-one-team");
             groupList.innerHTML = emptyMessage(
                 "拼", "暂时没有可加入的拼单", "现在开团，邀请好友一起享优惠",
                 '<button type="button" data-start-group>去开团</button>');
             return;
         }
-        groupList.innerHTML = data.teamList.map(team => {
-            const remaining = Math.max((team.targetCount || 0) - (team.lockCount || 0), 0);
-            return `
-                <div class="group-item">
-                    <div class="avatar">${StoreApi.escapeHtml((team.userId || "拼").slice(0, 1).toUpperCase())}</div>
-                    <div class="group-user">
-                        <strong>${maskUser(team.userId)}</strong>
-                        <p>还差 <em>${remaining}</em> 人锁满 · 已支付 ${team.completeCount || 0} 人 ·
-                        <span class="countdown" data-seconds="${parseCountdown(team.validTimeCountdown)}">${StoreApi.escapeHtml(team.validTimeCountdown || "--:--:--")}</span></p>
-                    </div>
-                    <button type="button" data-team-id="${StoreApi.escapeHtml(team.teamId)}">去拼单</button>
-                </div>`;
-        }).join("");
+        const pages = [];
+        for (let index = 0; index < teams.length; index += 2) {
+            const page = teams.slice(index, index + 2);
+            if (page.length === 1 && teams.length > 1) page.push(teams[0]);
+            pages.push(page);
+        }
+        if (teams.length === 2) pages.push([teams[1], teams[0]]);
+        groupList.innerHTML = `<div class="group-carousel-track">${pages.map(page => `
+            <div class="group-carousel-page">
+                ${page.map(renderGroupItem).join("")}
+            </div>`).join("")}
+        </div>`;
+        groupList.classList.toggle("is-one-team", teams.length === 1);
         startCountdowns();
+        startGroupCarousel(pages.length);
+    }
+
+    function renderGroupItem(team) {
+        const remaining = Math.max((team.targetCount || 0) - (team.lockCount || 0), 0);
+        const nickname = teamNickname(team.userId);
+        return `
+            <div class="group-item">
+                <div class="avatar">${StoreApi.escapeHtml(nickname.slice(0, 1).toUpperCase() || "拼")}</div>
+                <div class="group-user">
+                    <strong>${StoreApi.escapeHtml(nickname)}</strong>
+                    <p>还差 <em>${remaining}</em> 人锁满 · 已支付 ${team.completeCount || 0} 人 ·
+                    <span class="countdown" data-seconds="${parseCountdown(team.validTimeCountdown)}">${StoreApi.escapeHtml(team.validTimeCountdown || "--:--:--")}</span></p>
+                </div>
+                <button type="button" data-team-id="${StoreApi.escapeHtml(team.teamId)}">去拼单</button>
+            </div>`;
+    }
+
+    function uniqueTeams(teams) {
+        const seen = new Set();
+        return teams.filter(team => {
+            if (!team || !team.teamId || seen.has(team.teamId)) return false;
+            seen.add(team.teamId);
+            return true;
+        });
+    }
+
+    function randomizeTeams(teams) {
+        const result = teams.slice();
+        for (let index = result.length - 1; index > 0; index -= 1) {
+            const target = Math.floor(Math.random() * (index + 1));
+            [result[index], result[target]] = [result[target], result[index]];
+        }
+        return result;
+    }
+
+    function teamNickname(teamUserId) {
+        const localUser = StoreIdentity.list().find(user => user.userId === teamUserId);
+        return localUser ? localUser.nickname : `拼友 ${maskUserValue(teamUserId)}`;
+    }
+
+    function startGroupCarousel(pageCount) {
+        groupCarouselIndex = 0;
+        if (pageCount < 2) return;
+        groupCarouselTimer = setInterval(() => {
+            groupCarouselIndex = (groupCarouselIndex + 1) % pageCount;
+            const track = groupList.querySelector(".group-carousel-track");
+            if (track) track.style.transform = `translateY(-${groupCarouselIndex * 100}%)`;
+        }, 4000);
+    }
+
+    function stopMarketTimers() {
+        clearInterval(groupCarouselTimer);
+        clearInterval(countdownTimer);
+        groupCarouselTimer = null;
+        countdownTimer = null;
+        groupCarouselIndex = 0;
+        groupList.classList.remove("is-one-team");
     }
 
     function renderCurrentOrder(order) {
@@ -379,8 +443,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function maskUser(value) {
+        return StoreApi.escapeHtml(maskUserValue(value));
+    }
+
+    function maskUserValue(value) {
         const user = String(value || "拼友");
-        return StoreApi.escapeHtml(user.length <= 2 ? `${user[0]}*` : `${user.slice(0, 1)}***${user.slice(-1)}`);
+        return user.length <= 2 ? `${user[0]}*` : `${user.slice(0, 1)}***${user.slice(-1)}`;
     }
 
     function parseCountdown(value) {
@@ -391,19 +459,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function startCountdowns() {
         document.querySelectorAll(".countdown").forEach(element => {
-            let seconds = Number(element.dataset.seconds || 0);
-            const timer = setInterval(() => {
-                if (seconds <= 0) {
-                    element.textContent = "已结束";
-                    clearInterval(timer);
-                    return;
-                }
-                seconds -= 1;
-                const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
-                const minutes = String(Math.floor(seconds % 3600 / 60)).padStart(2, "0");
-                const secs = String(seconds % 60).padStart(2, "0");
-                element.textContent = `${hours}:${minutes}:${secs}`;
-            }, 1000);
+            element.dataset.endsAt = String(Date.now() + Number(element.dataset.seconds || 0) * 1000);
+        });
+        updateCountdowns();
+        countdownTimer = setInterval(updateCountdowns, 1000);
+    }
+
+    function updateCountdowns() {
+        document.querySelectorAll(".countdown").forEach(element => {
+            const seconds = Math.max(Math.ceil((Number(element.dataset.endsAt || 0) - Date.now()) / 1000), 0);
+            if (seconds <= 0) {
+                element.textContent = "已结束";
+                return;
+            }
+            const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
+            const minutes = String(Math.floor(seconds % 3600 / 60)).padStart(2, "0");
+            const secs = String(seconds % 60).padStart(2, "0");
+            element.textContent = `${hours}:${minutes}:${secs}`;
         });
     }
 
