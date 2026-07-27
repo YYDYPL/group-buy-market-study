@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderProduct(item) {
-        document.title = `${item.goodsName} - HJS 拼团`;
+        document.title = `${item.goodsName} - 拼省省`;
         document.getElementById("goodsName").textContent = item.goodsName;
         document.getElementById("detailTitle").textContent = item.goodsName;
         document.getElementById("subtitle").textContent = item.subtitle || "精选拼团好货";
