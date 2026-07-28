@@ -11,7 +11,8 @@
 - 支持在浏览器注册和切换多个本地模拟用户，通过邀请链接完成多人参团；商品详情随机轮播两支可加入队伍，并优先展示本地用户昵称。
 - 提供独立锁单待支付阶段、订单中心、团队成员详情、继续支付和退款入口。
 - 通过 RabbitMQ 发布成团和退款事件，并保留通知任务补偿机制。
-- 使用 Redis 实现动态配置、限流配置、分布式锁和业务缓存。
+- 使用 Nacos 作为动态配置中心，承载降级开关、灰度切量、渠道黑名单和缓存开关；通过 `@RefreshScope` 实现运行时配置热更新。
+- 使用 Redis 实现限流配置、分布式锁和业务缓存。
 - 使用 MyBatis、MySQL 保存活动、优惠、团队订单和通知任务。
 - 提供商品草稿、优惠试算、发布、下架、废弃、乐观锁和渠道切换。
 - 提供管理令牌鉴权、安全图片上传、移动商城、商品详情和运营后台。
@@ -23,6 +24,7 @@
 | --- | --- |
 | 运行环境 | Java 8、Maven |
 | Web 框架 | Spring Boot 2.7.12 |
+| 配置中心 | Nacos 2.2.3、Spring Cloud Alibaba 2021.0.5.0、Spring Cloud 2021.0.5 |
 | 持久化 | MyBatis 2.1.4、MySQL 8.0 |
 | 缓存与协调 | Redis 6.2、Redisson 3.26 |
 | 消息队列 | RabbitMQ 3.12 Management |
@@ -74,6 +76,8 @@ Docker Compose 中的服务只绑定本机回环地址。
 | 服务 | 地址 | 账号 | 密码 |
 | --- | --- | --- | --- |
 | Spring Boot | `http://127.0.0.1:8091` | - | - |
+| Nacos 控制台 | `http://127.0.0.1:8848/nacos` | `nacos` | `nacos` |
+| Nacos Open API | `http://127.0.0.1:8848/nacos/v1/` | `nacos` | `nacos` |
 | MySQL | `127.0.0.1:13306` | `root` | `123456` |
 | Redis | `127.0.0.1:16379` | - | 无密码 |
 | RabbitMQ AMQP | `127.0.0.1:5672` | `admin` | `admin` |
@@ -81,6 +85,8 @@ Docker Compose 中的服务只绑定本机回环地址。
 | 拼团商城 | `http://127.0.0.1:4173/` | - | - |
 | 运营后台 | `http://127.0.0.1:4173/admin/login.html` | 管理令牌 | `GBM_ADMIN_TOKEN` |
 | 交易实验台 | `http://127.0.0.1:4174/group-buy-flow/` | - | - |
+
+Nacos 2.2+ 默认开启鉴权，所有 Open API 调用都需要 `accessToken`；应用内部通过 `bootstrap.yml` 的账号密码自动认证，无需额外处理。
 
 这些账号仅用于本机开发，不应直接用于生产环境。
 
@@ -132,6 +138,26 @@ docs/dev-ops/mysql/sql/3-1-store-order-flow.sql
 docker exec mysql sh -lc "mysql --default-character-set=utf8mb4 -uroot -p123456 < /docker-entrypoint-initdb.d/02-product-admin-and-store.sql"
 docker exec mysql sh -lc "mysql --default-character-set=utf8mb4 -uroot -p123456 < /docker-entrypoint-initdb.d/03-store-order-flow.sql"
 ```
+
+#### 启动 Nacos 配置中心
+
+Nacos 单独维护一份 compose 文件，standalone 模式 + 内嵌 derby 存储，无需额外依赖 MySQL：
+
+```powershell
+docker compose -f docs/dev-ops/nacos/docker-compose.yml up -d
+```
+
+启动后访问 `http://127.0.0.1:8848/nacos`，使用 `nacos / nacos` 登录。建议在 `DEFAULT_GROUP` 下新建 dataId `group-buy-market-app-dev.yaml`，初始内容如下：
+
+```yaml
+dcc:
+  downgradeSwitch: "0"      # 系统降级开关：0 关闭，1 开启
+  cutRange: "100"           # 灰度切量范围：0~100
+  scBlacklist: s02c02       # 渠道黑名单：source+channel，逗号分隔
+  cacheSwitch: "0"          # 缓存开关：0 开启缓存，1 关闭
+```
+
+未在 Nacos 创建该 dataId 时，应用会使用 `DCCService` 中 `@Value` 的默认值，行为与上述初始值一致；创建后即可在 Nacos 控制台或通过 DCC 接口动态修改并热生效。
 
 ### 3. 编译项目
 
@@ -310,11 +336,27 @@ curl -X POST "http://127.0.0.1:8091/api/v1/gbm/trade/refund_market_pay_order" \
 
 ### 动态配置
 
+动态配置中心（DCC）基于 Nacos 实现，配置 key 统一收敛在 `dcc.*` 命名空间，通过 `@RefreshScope` 在配置变更后自动重建 `DCCService` Bean，无需重启应用。
+
+支持的配置项：
+
+| key | 默认值 | 含义 |
+| --- | --- | --- |
+| `downgradeSwitch` | `0` | 系统降级开关，`1` 开启降级 |
+| `cutRange` | `100` | 灰度切量范围，0~100 |
+| `scBlacklist` | `s02c02` | 渠道黑名单，`source+channel` 拼接，逗号分隔 |
+| `cacheSwitch` | `0` | 缓存开关，`0` 开启缓存，`1` 关闭 |
+
+通过 HTTP 接口发布配置变更（接口会自动读取、修改、整体发布 `group-buy-market-app-${profile}.yaml` 到 Nacos）：
+
 ```bash
-curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=downgradeSwitch&value=0"
-curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=cutRange&value=100"
-curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=rateLimiterSwitch&value=open"
+curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=downgradeSwitch&value=1"
+curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=cutRange&value=30"
+curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=scBlacklist&value=s02c02,s03c03"
+curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=cacheSwitch&value=1"
 ```
+
+也可以直接在 Nacos 控制台编辑 `group-buy-market-app-dev.yaml`，保存后客户端长轮询感知变更并触发 `@RefreshScope` 刷新。完整链路：HTTP/Nacos 控制台 → `ConfigService.publishConfig` → Nacos Server 持久化 → 客户端长轮询感知 → `RefreshEvent` → `@RefreshScope` Bean 重建 → `@Value` 注入新值。
 
 ## 环境变量
 
@@ -322,6 +364,12 @@ curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=rateLimiterSwitch&v
 
 | 环境变量 | 默认值 | 用途 |
 | --- | --- | --- |
+| `NACOS_HOST` | `127.0.0.1` | Nacos Server 主机 |
+| `NACOS_PORT` | `8848` | Nacos Server 端口 |
+| `NACOS_NAMESPACE` | `public` | Nacos 命名空间 |
+| `NACOS_GROUP` | `DEFAULT_GROUP` | Nacos 配置分组 |
+| `NACOS_USERNAME` | `nacos` | Nacos 鉴权账号 |
+| `NACOS_PASSWORD` | `nacos` | Nacos 鉴权密码 |
 | `MYSQL_HOST` | `127.0.0.1` | MySQL 主机 |
 | `MYSQL_PORT` | `13306` | MySQL 端口 |
 | `MYSQL_DATABASE` | `group_buy_market` | 数据库名称 |
@@ -335,6 +383,8 @@ curl "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=rateLimiterSwitch&v
 | `RABBITMQ_PASSWORD` | `admin` | RabbitMQ 密码 |
 | `GBM_ADMIN_TOKEN` | 空 | 运营后台管理令牌；为空时后台接口关闭 |
 | `GBM_UPLOAD_DIR` | `./uploads` | 商品图片上传目录 |
+
+Nacos 相关变量在 `bootstrap.yml` 中读取，必须早于 `application*.yml` 加载；修改后需要重新启动应用才能生效。
 
 PowerShell 示例：
 
@@ -381,6 +431,12 @@ node --check docs/ui/group-buy-flow/app.js
 
 # 检查应用健康状态
 Invoke-RestMethod http://127.0.0.1:8091/actuator/health
+
+# 检查 Nacos 控制台就绪状态
+Invoke-RestMethod http://127.0.0.1:8848/nacos/v1/console/health/readiness
+
+# 校验 DCC 动态配置端到端链路（应用启动后执行）
+Invoke-RestMethod "http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=downgradeSwitch&value=1"
 ```
 
 ## 停止服务
@@ -405,6 +461,7 @@ Get-NetTCPConnection -LocalPort 4173 -State Listen |
 
 ```powershell
 docker compose -f docs/dev-ops/docker-compose-environment.yml stop
+docker compose -f docs/dev-ops/nacos/docker-compose.yml stop
 ```
 
 ## 常见问题
@@ -412,11 +469,20 @@ docker compose -f docs/dev-ops/docker-compose-environment.yml stop
 ### 端口已被占用
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8091,4173,4174,13306,16379,5672,15672 -ErrorAction SilentlyContinue |
+Get-NetTCPConnection -LocalPort 8091,4173,4174,8848,9848,9849,13306,16379,5672,15672 -ErrorAction SilentlyContinue |
   Select-Object LocalPort, State, OwningProcess
 ```
 
 确认占用进程后再决定是否停止，避免误关其他项目的共享中间件。
+
+### Nacos 配置拉取失败
+
+应用启动时若日志出现 `NacosException: caused by ...` 或 `fail-fast` 相关错误，依次确认：
+
+1. Nacos 容器是否健康：`docker ps --filter name=nacos`，状态应为 `Up (healthy)`。
+2. `bootstrap.yml` 中 `server-addr`、`username`、`password` 是否与本地 Nacos 一致。
+3. `http://127.0.0.1:8848/nacos/v1/console/health/readiness` 是否返回 200。
+4. Nacos 控制台 `DEFAULT_GROUP` 下是否存在 `group-buy-market-app-dev.yaml`；不存在时应用会使用 `@Value` 默认值，不会启动失败。
 
 ### 首页试算被限流
 
